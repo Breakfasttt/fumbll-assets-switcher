@@ -21,6 +21,8 @@ const api = {
   listCacheEntries: (folder: string): Promise<Record<string, string>> =>
     ipcRenderer.invoke("cache:listEntries", folder),
   openCacheFolder: (folder: string): Promise<string> => ipcRenderer.invoke("cache:openFolder", folder),
+  showFileInFolder: (folder: string, fileName: string): Promise<void> =>
+    ipcRenderer.invoke("shell:showFileInFolder", folder, fileName),
 
   listOverrides: (): Promise<Record<string, OverrideEntry>> => ipcRenderer.invoke("overrides:list"),
   getOverride: (url: string): Promise<OverrideEntry | null> => ipcRenderer.invoke("overrides:get", url),
@@ -37,6 +39,7 @@ const api = {
   readOverrideImage: (url: string): Promise<string | null> =>
     ipcRenderer.invoke("overrides:readImage", url),
   listInactiveOverrides: (): Promise<OverrideEntry[]> => ipcRenderer.invoke("overrides:listInactive"),
+  showOverrideInFolder: (url: string): Promise<void> => ipcRenderer.invoke("overrides:showInFolder", url),
 
   listOrphanCacheFiles: (folder: string): Promise<OrphanCacheFile[]> =>
     ipcRenderer.invoke("cache:listOrphanFiles", folder),

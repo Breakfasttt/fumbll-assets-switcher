@@ -78,6 +78,16 @@ export function ConfigView({
           </Button>
         </div>
       </Card>
+
+      <Card>
+        <CardTitle>{t("config.setupTitle")}</CardTitle>
+        <ol className="list-decimal space-y-1.5 pl-5 text-sm text-muted">
+          <li>{t("config.setupStep1")}</li>
+          <li>{t("config.setupStep2")}</li>
+          <li>{t("config.setupStep3")}</li>
+          <li>{t("config.setupStep4")}</li>
+        </ol>
+      </Card>
     </div>
   );
 }

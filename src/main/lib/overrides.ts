@@ -1,4 +1,4 @@
-import { app } from "electron";
+import { app, shell } from "electron";
 import { promises as fs } from "fs";
 import * as path from "path";
 import { computeHash, putImageInCache, removeImageFromCache } from "./cacheWriter";
@@ -98,6 +98,14 @@ export async function readOverrideImageDataUrl(url: string): Promise<string | nu
   } catch {
     return null;
   }
+}
+
+/** Reveals the override's stored file in the OS file explorer (never in the FFB cache folder, since it lives in the tool's own overrides folder). */
+export async function showOverrideInFolder(url: string): Promise<void> {
+  const index = await readIndex();
+  const entry = index[url];
+  if (!entry) return;
+  shell.showItemInFolder(overrideFilePath(entry.fileName));
 }
 
 export async function deleteOverride(cacheFolder: string, url: string): Promise<void> {

@@ -18,6 +18,7 @@ import {
   setOverrideActive,
   deleteOverride,
   readOverrideImageDataUrl,
+  showOverrideInFolder,
 } from "./lib/overrides";
 import { fetchRoster, fetchDivisionRosters, fetchAssetImageDataUrl } from "./lib/fumbblApi";
 import { WEATHER_CODES } from "../shared/types";
@@ -69,6 +70,9 @@ ipcMain.handle("dialog:selectFolder", async () => {
 ipcMain.handle("cache:validateFolder", (_e, folder: string) => validateCacheFolder(folder));
 ipcMain.handle("cache:listEntries", (_e, folder: string) => listCacheEntries(folder));
 ipcMain.handle("cache:openFolder", (_e, folder: string) => shell.openPath(folder));
+ipcMain.handle("shell:showFileInFolder", (_e, folder: string, fileName: string) =>
+  shell.showItemInFolder(path.join(folder, fileName))
+);
 
 ipcMain.handle("overrides:list", () => listOverrides());
 ipcMain.handle("overrides:get", (_e, url: string) => getOverride(url));
@@ -84,6 +88,7 @@ ipcMain.handle(
 ipcMain.handle("overrides:delete", (_e, folder: string, url: string) => deleteOverride(folder, url));
 ipcMain.handle("overrides:readImage", (_e, url: string) => readOverrideImageDataUrl(url));
 ipcMain.handle("overrides:listInactive", () => listInactiveOverrides());
+ipcMain.handle("overrides:showInFolder", (_e, url: string) => showOverrideInFolder(url));
 
 ipcMain.handle("cache:listOrphanFiles", (_e, folder: string) => listOrphanCacheFiles(folder));
 ipcMain.handle("cache:readOrphanFile", (_e, folder: string, fileName: string) => readCacheFileDataUrl(folder, fileName));

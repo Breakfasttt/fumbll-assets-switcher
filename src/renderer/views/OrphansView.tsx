@@ -3,6 +3,8 @@ import { OverrideEntry, OrphanCacheFile } from "../../shared/types";
 import { Card, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { useTranslation } from "../i18n/LanguageContext";
+import { fetchAllRosters, indexRosterUsage, getRosterUsageIndexReady, getRostersUsingAsset } from "../lib/rosters";
+import { ImageZoomButton } from "./ImageZoomModal";
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -28,6 +30,12 @@ export function OrphansView({ cacheFolder }: { cacheFolder: string }) {
 
   useEffect(() => {
     refresh();
+    // Make sure the roster usage index gets built even if the user never
+    // visited the Rosters tab this session, so we can show which roster an
+    // inactive override belongs to.
+    if (!getRosterUsageIndexReady()) {
+      fetchAllRosters().then((rosters) => indexRosterUsage(rosters.map((r) => r.id)));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cacheFolder]);
 
@@ -86,21 +94,36 @@ export function OrphansView({ cacheFolder }: { cacheFolder: string }) {
 function InactiveOverrideCard({ entry, onDelete }: { entry: OverrideEntry; onDelete: () => void }) {
   const { t } = useTranslation();
   const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [rosters, setRosters] = useState<Set<string> | undefined>(undefined);
 
   useEffect(() => {
     window.fumbblApi.readOverrideImage(entry.url).then(setImageSrc);
+    const ready = getRosterUsageIndexReady();
+    ready?.then(() => setRosters(getRostersUsingAsset(entry.url)));
   }, [entry.url]);
 
   return (
-    <div className="flex w-56 flex-col gap-2 rounded-lg border border-border-strong bg-card-raised p-3">
-      {imageSrc && (
-        <img
-          src={imageSrc}
-          className="h-24 w-full rounded bg-well object-contain"
-          style={{ imageRendering: "pixelated" }}
-        />
-      )}
-      <div className="break-all text-xs text-muted">{entry.url}</div>
+    <div className="flex w-56 min-w-0 flex-col gap-2 rounded-lg border border-border-strong bg-card-raised p-3">
+      <div className="relative">
+        {imageSrc && (
+          <img
+            src={imageSrc}
+            className="h-24 w-full rounded bg-well object-contain"
+            style={{ imageRendering: "pixelated" }}
+          />
+        )}
+        {imageSrc && <ImageZoomButton imageSrc={imageSrc} reveal={{ kind: "override", ref: entry.url }} />}
+      </div>
+      <div className="truncate text-xs text-muted" title={entry.url}>
+        {entry.url}
+      </div>
+      <div className="truncate text-xs text-faint">
+        {rosters && rosters.size > 0
+          ? t("orphans.rosterLabel", { rosters: [...rosters].sort().join(", ") })
+          : rosters !== undefined
+            ? t("orphans.rosterUnknown")
+            : ""}
+      </div>
       <Button size="sm" variant="destructive" onClick={onDelete}>
         {t("orphans.deleteButton")}
       </Button>
@@ -125,15 +148,22 @@ function OrphanFileCard({
   }, [cacheFolder, file.fileName]);
 
   return (
-    <div className="flex w-56 flex-col gap-2 rounded-lg border border-border-strong bg-card-raised p-3">
-      {imageSrc && (
-        <img
-          src={imageSrc}
-          className="h-24 w-full rounded bg-well object-contain"
-          style={{ imageRendering: "pixelated" }}
-        />
-      )}
-      <div className="text-xs text-muted">{file.fileName}</div>
+    <div className="flex w-56 min-w-0 flex-col gap-2 rounded-lg border border-border-strong bg-card-raised p-3">
+      <div className="relative">
+        {imageSrc && (
+          <img
+            src={imageSrc}
+            className="h-24 w-full rounded bg-well object-contain"
+            style={{ imageRendering: "pixelated" }}
+          />
+        )}
+        {imageSrc && (
+          <ImageZoomButton imageSrc={imageSrc} reveal={{ kind: "cacheFile", cacheFolder, ref: file.fileName }} />
+        )}
+      </div>
+      <div className="truncate text-xs text-muted" title={file.fileName}>
+        {file.fileName}
+      </div>
       <div className="text-xs text-faint">{formatSize(file.sizeBytes)}</div>
       <Button size="sm" variant="destructive" onClick={onDelete}>
         {t("orphans.deleteButton")}

@@ -8,6 +8,7 @@ import { useTranslation } from "../i18n/LanguageContext";
 import { OverrideEntry } from "../../shared/types";
 import { AtlasBreakdown } from "./AtlasBreakdown";
 import { PromptPopover } from "./PromptPopover";
+import { ImageZoomButton } from "./ImageZoomModal";
 import { buildPortraitPrompt, buildIconsetPrompt, type PromptContext } from "../lib/imagePrompt";
 import type { AtlasInfo } from "./PixelEditor";
 
@@ -170,6 +171,7 @@ export function AssetPanel({
           <DropSlot
             title={t("assetPanel.slot.custom")}
             imageSrc={overrideDataUrl}
+            url={url}
             active={customActive}
             aspectRatio={slotAspectRatio}
             dragOver={dragOver}
@@ -240,14 +242,17 @@ function AssetSlot({
       style={{ width: thumbWidth + 24 }}
     >
       {active && (
-        <div className="absolute left-2 top-2 h-2.5 w-2.5 rounded-full bg-accent-active shadow-[0_0_0_2px_theme(colors.card)]" />
+        <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-accent-active shadow-[0_0_0_2px_theme(colors.card)]" />
       )}
       {imageSrc ? (
-        <img
-          src={imageSrc}
-          className="rounded bg-well object-contain"
-          style={{ width: thumbWidth, height: SLOT_THUMB_HEIGHT, imageRendering: "pixelated" }}
-        />
+        <div className="relative">
+          <img
+            src={imageSrc}
+            className="rounded bg-well object-contain"
+            style={{ width: thumbWidth, height: SLOT_THUMB_HEIGHT, imageRendering: "pixelated" }}
+          />
+          <ImageZoomButton imageSrc={imageSrc} />
+        </div>
       ) : (
         <div
           className="flex items-center justify-center rounded bg-well text-center text-xs text-faint"
@@ -270,6 +275,7 @@ function AssetSlot({
 function DropSlot({
   title,
   imageSrc,
+  url,
   active,
   aspectRatio,
   dragOver,
@@ -282,6 +288,7 @@ function DropSlot({
 }: {
   title: string;
   imageSrc: string | null;
+  url: string;
   active: boolean;
   aspectRatio: number;
   dragOver: boolean;
@@ -322,7 +329,7 @@ function DropSlot({
       style={{ width: thumbWidth + 24 }}
     >
       {active && (
-        <div className="absolute left-2 top-2 h-2.5 w-2.5 rounded-full bg-accent-active shadow-[0_0_0_2px_theme(colors.card)]" />
+        <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-accent-active shadow-[0_0_0_2px_theme(colors.card)]" />
       )}
       {onDelete && (
         <button
@@ -330,17 +337,20 @@ function DropSlot({
             e.stopPropagation();
             onDelete();
           }}
-          className="absolute right-1 top-1 rounded bg-danger px-1.5 py-0.5 text-xs hover:bg-danger-hover"
+          className="absolute right-1 top-1 z-10 rounded bg-danger px-1.5 py-0.5 text-xs hover:bg-danger-hover"
         >
           ✕
         </button>
       )}
       {imageSrc ? (
-        <img
-          src={imageSrc}
-          className="rounded bg-well object-contain"
-          style={{ width: thumbWidth, height: SLOT_THUMB_HEIGHT, imageRendering: "pixelated" }}
-        />
+        <div className="relative">
+          <img
+            src={imageSrc}
+            className="rounded bg-well object-contain"
+            style={{ width: thumbWidth, height: SLOT_THUMB_HEIGHT, imageRendering: "pixelated" }}
+          />
+          <ImageZoomButton imageSrc={imageSrc} reveal={{ kind: "override", ref: url }} />
+        </div>
       ) : (
         <div
           className="flex items-center justify-center rounded bg-well text-center text-xs text-faint"

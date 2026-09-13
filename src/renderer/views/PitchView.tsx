@@ -3,6 +3,7 @@ import { WEATHER_CODES, WeatherCode } from "../../shared/types";
 import { Card, CardTitle } from "../components/ui/card";
 import { cn } from "../lib/utils";
 import { useTranslation } from "../i18n/LanguageContext";
+import { ImageZoomButton } from "./ImageZoomModal";
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   let binary = "";
@@ -17,6 +18,7 @@ export function PitchView({ cacheFolder }: { cacheFolder: string }) {
   const { t } = useTranslation();
   const [baseUrl, setBaseUrl] = useState("");
   const [thumbs, setThumbs] = useState<Record<string, string>>({});
+  const [thumbUrls, setThumbUrls] = useState<Record<string, string>>({});
   const [dragOverCode, setDragOverCode] = useState<WeatherCode | null>(null);
 
   const handleDrop = async (code: WeatherCode, file: File) => {
@@ -30,6 +32,7 @@ export function PitchView({ cacheFolder }: { cacheFolder: string }) {
     const format = (file.name.split(".").pop() || "png").toLowerCase();
     await window.fumbblApi.saveOverride(cacheFolder, fullUrl, base64, format);
     setThumbs((prev) => ({ ...prev, [code]: URL.createObjectURL(file) }));
+    setThumbUrls((prev) => ({ ...prev, [code]: fullUrl }));
   };
 
   return (
@@ -63,7 +66,13 @@ export function PitchView({ cacheFolder }: { cacheFolder: string }) {
             )}
           >
             {thumbs[code] ? (
-              <img src={thumbs[code]} className="h-14 w-14 object-contain" style={{ imageRendering: "pixelated" }} />
+              <div className="relative">
+                <img src={thumbs[code]} className="h-14 w-14 object-contain" style={{ imageRendering: "pixelated" }} />
+                <ImageZoomButton
+                  imageSrc={thumbs[code]}
+                  reveal={thumbUrls[code] ? { kind: "override", ref: thumbUrls[code] } : undefined}
+                />
+              </div>
             ) : null}
             {code}
           </div>

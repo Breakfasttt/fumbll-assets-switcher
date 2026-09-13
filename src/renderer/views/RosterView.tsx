@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { RosterInfo } from "../../shared/types";
 import { Card, CardTitle } from "../components/ui/card";
-import { Button } from "../components/ui/button";
 import { Checkbox } from "../components/ui/checkbox";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/select";
 import { BB2025_ROSTER_IDS, fetchAllRosters, indexRosterUsage } from "../lib/rosters";
@@ -37,21 +36,31 @@ export function RosterView({ cacheFolder }: { cacheFolder: string }) {
     return [...list].sort((a, b) => a.name.localeCompare(b.name));
   }, [allRosters, showSpecial]);
 
-  const loadRoster = async () => {
+  useEffect(() => {
     const id = Number(selectedRosterId);
-    if (!id) return;
+    if (!id) {
+      setRoster(null);
+      return;
+    }
+    let cancelled = false;
     setLoadingRoster(true);
     setError(null);
     setRoster(null);
-    try {
-      const data = await window.fumbblApi.fetchRoster(id);
-      setRoster(data);
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setLoadingRoster(false);
-    }
-  };
+    window.fumbblApi
+      .fetchRoster(id)
+      .then((data) => {
+        if (!cancelled) setRoster(data);
+      })
+      .catch((e: any) => {
+        if (!cancelled) setError(e.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingRoster(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedRosterId]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -72,9 +81,6 @@ export function RosterView({ cacheFolder }: { cacheFolder: string }) {
               ))}
             </SelectContent>
           </Select>
-          <Button onClick={loadRoster} disabled={!selectedRosterId}>
-            {t("roster.loadButton")}
-          </Button>
           <label className="flex items-center gap-2 text-sm text-muted">
             <Checkbox checked={showSpecial} onCheckedChange={(v) => setShowSpecial(v === true)} />
             {t("roster.specialCheckbox")}
