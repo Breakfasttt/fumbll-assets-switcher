@@ -4,7 +4,8 @@ import { Button } from "../components/ui/button";
 import { useTranslation } from "../i18n/LanguageContext";
 
 export interface CropTarget {
-  file: File;
+  /** Object URL or data URL of the image to crop. */
+  imageSrc: string;
   url: string;
   targetWidth: number;
   targetHeight: number;
@@ -31,7 +32,7 @@ const VIEWPORT_HEIGHT = 360;
 
 export function CropEditor({ target, cacheFolder, onDone }: { target: CropTarget; cacheFolder: string; onDone: () => void }) {
   const { t } = useTranslation();
-  const { file, url, targetWidth, targetHeight, onSaved } = target;
+  const { imageSrc, url, targetWidth, targetHeight, onSaved } = target;
   const aspect = targetWidth / targetHeight;
 
   const [sourceImg, setSourceImg] = useState<HTMLImageElement | null>(null);
@@ -43,17 +44,15 @@ export function CropEditor({ target, cacheFolder, onDone }: { target: CropTarget
   const viewportWidth = VIEWPORT_HEIGHT * aspect;
 
   useEffect(() => {
-    const objectUrl = URL.createObjectURL(file);
-    loadImage(objectUrl).then((img) => {
+    loadImage(imageSrc).then((img) => {
       setSourceImg(img);
       // Start zoomed so the crop box is fully covered by the source image.
       const coverScale = Math.max(viewportWidth / img.width, VIEWPORT_HEIGHT / img.height);
       setZoom(coverScale);
       setOffset({ x: 0, y: 0 });
     });
-    return () => URL.revokeObjectURL(objectUrl);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [file]);
+  }, [imageSrc]);
 
   const draw = () => {
     const canvas = canvasRef.current;

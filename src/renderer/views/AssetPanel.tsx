@@ -7,6 +7,8 @@ import { useImageDimensions } from "../hooks/useImageDimensions";
 import { useTranslation } from "../i18n/LanguageContext";
 import { OverrideEntry } from "../../shared/types";
 import { AtlasBreakdown } from "./AtlasBreakdown";
+import { PromptPopover } from "./PromptPopover";
+import { buildPortraitPrompt, buildIconsetPrompt, type PromptContext } from "../lib/imagePrompt";
 import type { AtlasInfo } from "./PixelEditor";
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
@@ -33,9 +35,23 @@ interface Props {
   showAtlasBreakdown?: boolean;
   onOpenEditor?: (atlasInfo: AtlasInfo, url: string, row: number, col: number, onSaved: () => void) => void;
   onOpenCrop?: (file: File, url: string, onSaved: () => void) => void;
+  onRecropExisting?: (imageSrc: string, url: string, onSaved: () => void) => void;
+  /** Width/height ratio for the slot thumbnails, e.g. 95/147 for portraits. Defaults to a 1:1 square (iconsets). */
+  slotAspectRatio?: number;
+  promptContext?: PromptContext;
 }
 
-export function AssetPanel({ label, url, cacheFolder, showAtlasBreakdown, onOpenEditor, onOpenCrop }: Props) {
+export function AssetPanel({
+  label,
+  url,
+  cacheFolder,
+  showAtlasBreakdown,
+  onOpenEditor,
+  onOpenCrop,
+  onRecropExisting,
+  slotAspectRatio = 1,
+  promptContext,
+}: Props) {
   const { t } = useTranslation();
   const [defaultDataUrl, setDefaultDataUrl] = useState<string | null>(null);
   const [defaultError, setDefaultError] = useState<string | null>(null);
@@ -76,6 +92,12 @@ export function AssetPanel({ label, url, cacheFolder, showAtlasBreakdown, onOpen
     ready?.then(() => setUsedBy(getRostersUsingAsset(url)));
   }, [url, cacheFolder]);
 
+  // Must run on every render (Rules of Hooks) even when `url` is null, so
+  // this is computed before the early return below.
+  const defaultActive = !override || !override.active;
+  const activeDataUrl = defaultActive ? defaultDataUrl : overrideDataUrl;
+  const activeDims = useImageDimensions(activeDataUrl);
+
   if (!url) {
     return (
       <Card>
@@ -86,7 +108,6 @@ export function AssetPanel({ label, url, cacheFolder, showAtlasBreakdown, onOpen
   }
 
   const assetId = extractAssetId(url);
-  const defaultActive = !override || !override.active;
   const customActive = !!override?.active;
 
   const setActive = async (active: boolean) => {
@@ -109,11 +130,24 @@ export function AssetPanel({ label, url, cacheFolder, showAtlasBreakdown, onOpen
     await refreshOverride(url);
   };
 
-  const activeDataUrl = defaultActive ? defaultDataUrl : overrideDataUrl;
+  const buildPrompt = () => {
+    if (!promptContext) return "";
+    if (showAtlasBreakdown) {
+      const cellSize = activeDims ? Math.round(activeDims.width / 4) : 30;
+      const rows = activeDims && cellSize > 0 ? Math.round(activeDims.height / cellSize) : 1;
+      return buildIconsetPrompt(promptContext, cellSize, rows);
+    }
+    const width = activeDims?.width ?? 95;
+    const height = activeDims?.height ?? 147;
+    return buildPortraitPrompt(promptContext, width, height);
+  };
 
   return (
     <Card>
-      <CardTitle>{label}</CardTitle>
+      <div className="mb-3 flex items-center justify-between">
+        <CardTitle className="mb-0">{label}</CardTitle>
+        {promptContext && <PromptPopover buildPrompt={buildPrompt} />}
+      </div>
       <div className="mb-3 text-sm text-muted">
         {usedBy && usedBy.size > 0
           ? t("assetPanel.usedByPrefix", { list: [...usedBy].sort().join(", ") })
@@ -130,12 +164,14 @@ export function AssetPanel({ label, url, cacheFolder, showAtlasBreakdown, onOpen
             imageSrc={defaultDataUrl}
             error={defaultError}
             active={defaultActive}
+            aspectRatio={slotAspectRatio}
             onClick={() => override && setActive(false)}
           />
           <DropSlot
             title={t("assetPanel.slot.custom")}
             imageSrc={overrideDataUrl}
             active={customActive}
+            aspectRatio={slotAspectRatio}
             dragOver={dragOver}
             onDragOver={() => setDragOver(true)}
             onDragLeave={() => setDragOver(false)}
@@ -145,6 +181,11 @@ export function AssetPanel({ label, url, cacheFolder, showAtlasBreakdown, onOpen
             }}
             onClick={() => override && !override.active && setActive(true)}
             onDelete={override ? deleteOverride : undefined}
+            onRecrop={
+              onRecropExisting && overrideDataUrl
+                ? () => onRecropExisting(overrideDataUrl, url, () => refreshOverride(url))
+                : undefined
+            }
           />
         </div>
 
@@ -162,12 +203,15 @@ export function AssetPanel({ label, url, cacheFolder, showAtlasBreakdown, onOpen
   );
 }
 
+const SLOT_THUMB_HEIGHT = 96;
+
 function AssetSlot({
   title,
   subtitle,
   imageSrc,
   error,
   active,
+  aspectRatio,
   onClick,
 }: {
   title: string;
@@ -175,9 +219,11 @@ function AssetSlot({
   imageSrc: string | null;
   error: string | null;
   active: boolean;
+  aspectRatio: number;
   onClick: () => void;
 }) {
   const dims = useImageDimensions(imageSrc);
+  const thumbWidth = SLOT_THUMB_HEIGHT * aspectRatio;
 
   return (
     <div
@@ -188,17 +234,25 @@ function AssetSlot({
         if (e.key === "Enter" || e.key === " ") onClick();
       }}
       className={cn(
-        "relative flex w-40 min-h-[160px] cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-border-strong bg-card p-3 hover:border-faint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+        "relative flex min-h-[160px] cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-border-strong bg-card p-3 hover:border-faint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
         active && "border-accent bg-card-raised"
       )}
+      style={{ width: thumbWidth + 24 }}
     >
       {active && (
         <div className="absolute left-2 top-2 h-2.5 w-2.5 rounded-full bg-accent-active shadow-[0_0_0_2px_theme(colors.card)]" />
       )}
       {imageSrc ? (
-        <img src={imageSrc} className="h-24 w-24 rounded bg-well object-contain" style={{ imageRendering: "pixelated" }} />
+        <img
+          src={imageSrc}
+          className="rounded bg-well object-contain"
+          style={{ width: thumbWidth, height: SLOT_THUMB_HEIGHT, imageRendering: "pixelated" }}
+        />
       ) : (
-        <div className="flex h-24 w-24 items-center justify-center rounded bg-well text-center text-xs text-faint">
+        <div
+          className="flex items-center justify-center rounded bg-well text-center text-xs text-faint"
+          style={{ width: thumbWidth, height: SLOT_THUMB_HEIGHT }}
+        >
           {error ?? "..."}
         </div>
       )}
@@ -217,25 +271,30 @@ function DropSlot({
   title,
   imageSrc,
   active,
+  aspectRatio,
   dragOver,
   onDragOver,
   onDragLeave,
   onDrop,
   onClick,
   onDelete,
+  onRecrop,
 }: {
   title: string;
   imageSrc: string | null;
   active: boolean;
+  aspectRatio: number;
   dragOver: boolean;
   onDragOver: () => void;
   onDragLeave: () => void;
   onDrop: (file: File) => void;
   onClick: () => void;
   onDelete?: () => void;
+  onRecrop?: () => void;
 }) {
   const { t } = useTranslation();
   const dims = useImageDimensions(imageSrc);
+  const thumbWidth = SLOT_THUMB_HEIGHT * aspectRatio;
 
   return (
     <div
@@ -256,10 +315,11 @@ function DropSlot({
         if (file) onDrop(file);
       }}
       className={cn(
-        "relative flex w-40 min-h-[160px] cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed border-border-strong bg-card p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+        "relative flex min-h-[160px] cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed border-border-strong bg-card p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
         (dragOver || active) && "border-accent bg-card-raised",
         !imageSrc && "border-dashed"
       )}
+      style={{ width: thumbWidth + 24 }}
     >
       {active && (
         <div className="absolute left-2 top-2 h-2.5 w-2.5 rounded-full bg-accent-active shadow-[0_0_0_2px_theme(colors.card)]" />
@@ -276,9 +336,16 @@ function DropSlot({
         </button>
       )}
       {imageSrc ? (
-        <img src={imageSrc} className="h-24 w-24 rounded bg-well object-contain" style={{ imageRendering: "pixelated" }} />
+        <img
+          src={imageSrc}
+          className="rounded bg-well object-contain"
+          style={{ width: thumbWidth, height: SLOT_THUMB_HEIGHT, imageRendering: "pixelated" }}
+        />
       ) : (
-        <div className="flex h-24 w-24 items-center justify-center rounded bg-well text-center text-xs text-faint">
+        <div
+          className="flex items-center justify-center rounded bg-well text-center text-xs text-faint"
+          style={{ width: thumbWidth, height: SLOT_THUMB_HEIGHT }}
+        >
           {t("assetPanel.dropPlaceholder")}
         </div>
       )}
@@ -287,6 +354,17 @@ function DropSlot({
         <div className="text-xs text-faint">
           {dims.width}×{dims.height} px
         </div>
+      )}
+      {onRecrop && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onRecrop();
+          }}
+          className="rounded border border-border-strong px-2 py-0.5 text-xs text-muted hover:bg-card-raised hover:text-white"
+        >
+          {t("assetPanel.recropButton")}
+        </button>
       )}
     </div>
   );

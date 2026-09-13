@@ -14,9 +14,19 @@ const PORTRAIT_HEIGHT = 147;
 
 type SidePanel = { kind: "pixel"; target: EditorTarget } | { kind: "crop"; target: CropTarget } | null;
 
-export function PlayerDetail({ position, cacheFolder }: { position: Position; cacheFolder: string }) {
+export function PlayerDetail({
+  position,
+  rosterName,
+  cacheFolder,
+}: {
+  position: Position;
+  rosterName: string;
+  cacheFolder: string;
+}) {
   const { t } = useTranslation();
   const [sidePanel, setSidePanel] = useState<SidePanel>(null);
+
+  const promptContext = { rosterName, positionName: position.name, positionType: position.type };
 
   const openEditor = (atlasInfo: AtlasInfo, url: string, row: number, col: number, onSaved: () => void) => {
     setSidePanel({ kind: "pixel", target: { atlasInfo, url, row, col, onSaved } });
@@ -25,7 +35,20 @@ export function PlayerDetail({ position, cacheFolder }: { position: Position; ca
   const openCrop = (file: File, url: string, onSaved: () => void) => {
     setSidePanel({
       kind: "crop",
-      target: { file, url, targetWidth: PORTRAIT_WIDTH, targetHeight: PORTRAIT_HEIGHT, onSaved },
+      target: {
+        imageSrc: URL.createObjectURL(file),
+        url,
+        targetWidth: PORTRAIT_WIDTH,
+        targetHeight: PORTRAIT_HEIGHT,
+        onSaved,
+      },
+    });
+  };
+
+  const openCropFromExisting = (imageSrc: string, url: string, onSaved: () => void) => {
+    setSidePanel({
+      kind: "crop",
+      target: { imageSrc, url, targetWidth: PORTRAIT_WIDTH, targetHeight: PORTRAIT_HEIGHT, onSaved },
     });
   };
 
@@ -39,6 +62,9 @@ export function PlayerDetail({ position, cacheFolder }: { position: Position; ca
             url={position.urlPortrait}
             cacheFolder={cacheFolder}
             onOpenCrop={openCrop}
+            onRecropExisting={openCropFromExisting}
+            slotAspectRatio={PORTRAIT_WIDTH / PORTRAIT_HEIGHT}
+            promptContext={promptContext}
           />
           <AssetPanel
             label={t("playerDetail.iconsetLabel")}
@@ -46,6 +72,7 @@ export function PlayerDetail({ position, cacheFolder }: { position: Position; ca
             cacheFolder={cacheFolder}
             showAtlasBreakdown
             onOpenEditor={openEditor}
+            promptContext={promptContext}
           />
         </div>
 

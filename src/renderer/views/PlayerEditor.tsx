@@ -31,7 +31,9 @@ export function PlayerEditor({ roster, cacheFolder }: { roster: RosterInfo; cach
         ))}
       </div>
 
-      {selected && <PlayerDetail key={selected.name} position={selected} cacheFolder={cacheFolder} />}
+      {selected && (
+        <PlayerDetail key={selected.name} position={selected} rosterName={roster.name} cacheFolder={cacheFolder} />
+      )}
     </div>
   );
 }
