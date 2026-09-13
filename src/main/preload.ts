@@ -6,6 +6,7 @@ import {
   DetectedCoach,
   OverrideEntry,
   OrphanCacheFile,
+  PackSummary,
 } from "../shared/types";
 
 const api = {
@@ -15,6 +16,9 @@ const api = {
   detectCoaches: (): Promise<DetectedCoach[]> => ipcRenderer.invoke("registry:detectCoaches"),
 
   selectFolder: (): Promise<string | null> => ipcRenderer.invoke("dialog:selectFolder"),
+  selectSaveFile: (defaultFileName: string): Promise<string | null> =>
+    ipcRenderer.invoke("dialog:selectSaveFile", defaultFileName),
+  selectZipFile: (): Promise<string | null> => ipcRenderer.invoke("dialog:selectZipFile"),
 
   validateCacheFolder: (folder: string): Promise<boolean> =>
     ipcRenderer.invoke("cache:validateFolder", folder),
@@ -47,6 +51,15 @@ const api = {
     ipcRenderer.invoke("cache:readOrphanFile", folder, fileName),
   deleteOrphanCacheFile: (folder: string, fileName: string): Promise<void> =>
     ipcRenderer.invoke("cache:deleteOrphanFile", folder, fileName),
+
+  listPacks: (): Promise<PackSummary[]> => ipcRenderer.invoke("packs:list"),
+  exportPack: (name: string, description: string | undefined, destZipPath: string): Promise<void> =>
+    ipcRenderer.invoke("packs:export", name, description, destZipPath),
+  importPack: (zipPath: string): Promise<PackSummary> => ipcRenderer.invoke("packs:import", zipPath),
+  activatePack: (folder: string, packId: string): Promise<void> =>
+    ipcRenderer.invoke("packs:activate", folder, packId),
+  deletePack: (folder: string, packId: string): Promise<void> => ipcRenderer.invoke("packs:delete", folder, packId),
+  clearActivePack: (): Promise<void> => ipcRenderer.invoke("packs:clearActive"),
 
   fetchRoster: (rosterId: number): Promise<RosterInfo> => ipcRenderer.invoke("fumbbl:fetchRoster", rosterId),
   fetchDivisionRosters: (divisionId: number): Promise<DivisionRosterSummary[]> =>

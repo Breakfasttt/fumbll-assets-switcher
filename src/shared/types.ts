@@ -45,6 +45,30 @@ export interface OverrideEntry {
   url: string;
   fileName: string;
   active: boolean;
+  /** Set when this override was activated from an imported pack rather than an ad-hoc drag & drop. */
+  packId?: string;
+}
+
+export interface PackManifestEntry {
+  url: string;
+  fileName: string;
+}
+
+export interface PackManifest {
+  formatVersion: 1;
+  name: string;
+  description?: string;
+  createdAt: string;
+  entries: PackManifestEntry[];
+}
+
+export interface PackSummary {
+  id: string;
+  name: string;
+  description?: string;
+  importedAt: string;
+  entryCount: number;
+  active: boolean;
 }
 
 export interface OrphanCacheFile {

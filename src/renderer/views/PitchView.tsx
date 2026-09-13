@@ -6,7 +6,10 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGr
 import { cn } from "../lib/utils";
 import { useTranslation } from "../i18n/LanguageContext";
 import { useImageDimensions } from "../hooks/useImageDimensions";
+import { useActivePackGuard } from "../hooks/useActivePackGuard";
 import { ImageZoomButton } from "./ImageZoomModal";
+import { CropEditor, type CropTarget } from "./CropEditor";
+import { Dialog, DialogContent } from "../components/ui/dialog";
 import {
   SPECIAL_PITCH_OPTIONS,
   SYSTEM_PITCH_OPTIONS,
@@ -20,19 +23,15 @@ import { BB2025_ROSTER_IDS, fetchAllRosters } from "../lib/rosters";
 // URL, it always draws a hardcoded client-side image (see IconCache.getPitch).
 const OVERRIDABLE_WEATHERS: WeatherCode[] = ["heat", "sunny", "nice", "rain", "blizzard"];
 
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  let binary = "";
-  const bytes = new Uint8Array(buffer);
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
+// Confirmed empirically against real pitch zips (see cache map.json entries).
+const PITCH_WIDTH = 782;
+const PITCH_HEIGHT = 452;
 
 export function PitchView({ cacheFolder }: { cacheFolder: string }) {
   const { t } = useTranslation();
   const [rosterNames, setRosterNames] = useState<string[]>([]);
   const [selectedKey, setSelectedKey] = useState<string>("");
+  const [cropTarget, setCropTarget] = useState<CropTarget | null>(null);
 
   useEffect(() => {
     fetchAllRosters().then((rosters) => {
@@ -93,12 +92,23 @@ export function PitchView({ cacheFolder }: { cacheFolder: string }) {
               weather={weather}
               url={buildPitchWeatherUrl(selected.slug, weather)}
               cacheFolder={cacheFolder}
+              onOpenCrop={(imageSrc, url, onSaved) =>
+                setCropTarget({ imageSrc, url, targetWidth: PITCH_WIDTH, targetHeight: PITCH_HEIGHT, onSaved })
+              }
             />
           ))}
         </div>
       ) : (
         <div className="text-sm text-muted">{t("pitch.noSelection")}</div>
       )}
+
+      <Dialog open={cropTarget !== null} onOpenChange={(open) => !open && setCropTarget(null)}>
+        <DialogContent className="w-auto">
+          {cropTarget && (
+            <CropEditor target={cropTarget} cacheFolder={cacheFolder} onDone={() => setCropTarget(null)} />
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
@@ -112,12 +122,15 @@ function PitchWeatherSlot({
   weather,
   url,
   cacheFolder,
+  onOpenCrop,
 }: {
   weather: WeatherCode;
   url: string;
   cacheFolder: string;
+  onOpenCrop: (imageSrc: string, url: string, onSaved: () => void) => void;
 }) {
   const { t } = useTranslation();
+  const guardAgainstActivePack = useActivePackGuard();
   const [defaultDataUrl, setDefaultDataUrl] = useState<string | null>(null);
   const [defaultError, setDefaultError] = useState<string | null>(null);
   const [override, setOverride] = useState<OverrideEntry | null>(null);
@@ -157,20 +170,21 @@ function PitchWeatherSlot({
   const activeDims = useImageDimensions(activeDataUrl);
 
   const setActive = async (active: boolean) => {
+    if (!(await guardAgainstActivePack())) return;
     await window.fumbblApi.setOverrideActive(cacheFolder, url, active);
+    await window.fumbblApi.clearActivePack();
     await refreshOverride();
   };
 
-  const handleDrop = async (file: File) => {
-    const buffer = await file.arrayBuffer();
-    const base64 = arrayBufferToBase64(buffer);
-    const format = (file.name.split(".").pop() || "png").toLowerCase();
-    await window.fumbblApi.saveOverride(cacheFolder, url, base64, format);
-    await refreshOverride();
+  const handleDrop = (file: File) => {
+    // CropEditor guards + clears the active pack itself at actual save time.
+    onOpenCrop(URL.createObjectURL(file), url, refreshOverride);
   };
 
   const deleteOverride = async () => {
+    if (!(await guardAgainstActivePack())) return;
     await window.fumbblApi.deleteOverride(cacheFolder, url);
+    await window.fumbblApi.clearActivePack();
     await refreshOverride();
   };
 
@@ -265,6 +279,17 @@ function PitchWeatherSlot({
             </div>
           )}
           <div className="text-xs text-faint">{t("assetPanel.slot.custom")}</div>
+          {overrideDataUrl && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenCrop(overrideDataUrl, url, refreshOverride);
+              }}
+              className="rounded border border-border-strong px-2 py-0.5 text-xs text-muted hover:bg-card-raised hover:text-white"
+            >
+              {t("assetPanel.recropButton")}
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -22,6 +22,7 @@ import {
   showOverrideInFolder,
 } from "./lib/overrides";
 import { fetchRoster, fetchDivisionRosters, fetchAssetImageDataUrl, fetchAssetImageBuffer } from "./lib/fumbblApi";
+import { listPacks, exportPack, importPack, activatePack, deletePack, clearActivePack } from "./lib/packs";
 import { WEATHER_CODES } from "../shared/types";
 
 const isDev = !app.isPackaged;
@@ -68,6 +69,24 @@ ipcMain.handle("dialog:selectFolder", async () => {
   return result.filePaths[0];
 });
 
+ipcMain.handle("dialog:selectSaveFile", async (_e, defaultFileName: string) => {
+  const result = await dialog.showSaveDialog({
+    defaultPath: defaultFileName,
+    filters: [{ name: "FUMBBL Asset Pack", extensions: ["zip"] }],
+  });
+  if (result.canceled || !result.filePath) return null;
+  return result.filePath;
+});
+
+ipcMain.handle("dialog:selectZipFile", async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ["openFile"],
+    filters: [{ name: "FUMBBL Asset Pack", extensions: ["zip"] }],
+  });
+  if (result.canceled || result.filePaths.length === 0) return null;
+  return result.filePaths[0];
+});
+
 ipcMain.handle("cache:validateFolder", (_e, folder: string) => validateCacheFolder(folder));
 ipcMain.handle("cache:listEntries", (_e, folder: string) => listCacheEntries(folder));
 ipcMain.handle("cache:openFolder", (_e, folder: string) => shell.openPath(folder));
@@ -94,6 +113,17 @@ ipcMain.handle("overrides:showInFolder", (_e, url: string) => showOverrideInFold
 ipcMain.handle("cache:listOrphanFiles", (_e, folder: string) => listOrphanCacheFiles(folder));
 ipcMain.handle("cache:readOrphanFile", (_e, folder: string, fileName: string) => readCacheFileDataUrl(folder, fileName));
 ipcMain.handle("cache:deleteOrphanFile", (_e, folder: string, fileName: string) => deleteOrphanCacheFile(folder, fileName));
+
+ipcMain.handle("packs:list", () => listPacks());
+ipcMain.handle(
+  "packs:export",
+  (_e, name: string, description: string | undefined, destZipPath: string) =>
+    exportPack(name, description, destZipPath)
+);
+ipcMain.handle("packs:import", (_e, zipPath: string) => importPack(zipPath));
+ipcMain.handle("packs:activate", (_e, folder: string, packId: string) => activatePack(folder, packId));
+ipcMain.handle("packs:delete", (_e, folder: string, packId: string) => deletePack(folder, packId));
+ipcMain.handle("packs:clearActive", () => clearActivePack());
 
 ipcMain.handle("fumbbl:fetchRoster", (_e, rosterId: number) => fetchRoster(rosterId));
 ipcMain.handle("fumbbl:fetchDivisionRosters", (_e, divisionId: number) => fetchDivisionRosters(divisionId));

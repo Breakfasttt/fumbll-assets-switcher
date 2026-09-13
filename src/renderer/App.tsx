@@ -2,17 +2,21 @@ import { useState } from "react";
 import { cn } from "./lib/utils";
 import { useCacheFolder } from "./hooks/useCacheFolder";
 import { LanguageProvider, useTranslation } from "./i18n/LanguageContext";
+import { ConfirmDialogProvider } from "./components/ConfirmDialogProvider";
 import { ConfigView } from "./views/ConfigView";
 import { RosterView } from "./views/RosterView";
 import { PitchView } from "./views/PitchView";
+import { PacksView } from "./views/PacksView";
 import { OrphansView } from "./views/OrphansView";
 
-type Tab = "config" | "rosters" | "pitches" | "orphans";
+type Tab = "config" | "rosters" | "pitches" | "packs" | "orphans";
 
 export function App() {
   return (
     <LanguageProvider>
-      <AppShell />
+      <ConfirmDialogProvider>
+        <AppShell />
+      </ConfirmDialogProvider>
     </LanguageProvider>
   );
 }
@@ -26,6 +30,7 @@ function AppShell() {
     { id: "config", label: t("app.tab.config") },
     { id: "rosters", label: t("app.tab.rosters") },
     { id: "pitches", label: t("app.tab.pitches") },
+    { id: "packs", label: t("app.tab.packs") },
     { id: "orphans", label: t("app.tab.orphans") },
   ];
 
@@ -81,6 +86,7 @@ function AppShell() {
         )}
         {effectiveTab === "rosters" && cacheFolder && <RosterView cacheFolder={cacheFolder} />}
         {effectiveTab === "pitches" && cacheFolder && <PitchView cacheFolder={cacheFolder} />}
+        {effectiveTab === "packs" && cacheFolder && <PacksView cacheFolder={cacheFolder} />}
         {effectiveTab === "orphans" && cacheFolder && <OrphansView cacheFolder={cacheFolder} />}
       </main>
     </div>

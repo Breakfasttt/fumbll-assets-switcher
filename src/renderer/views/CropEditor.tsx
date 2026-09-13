@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Card, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { useTranslation } from "../i18n/LanguageContext";
+import { useActivePackGuard } from "../hooks/useActivePackGuard";
 
 export interface CropTarget {
   /** Object URL or data URL of the image to crop. */
@@ -32,6 +33,7 @@ const VIEWPORT_HEIGHT = 360;
 
 export function CropEditor({ target, cacheFolder, onDone }: { target: CropTarget; cacheFolder: string; onDone: () => void }) {
   const { t } = useTranslation();
+  const guardAgainstActivePack = useActivePackGuard();
   const { imageSrc, url, targetWidth, targetHeight, onSaved } = target;
   const aspect = targetWidth / targetHeight;
 
@@ -88,6 +90,7 @@ export function CropEditor({ target, cacheFolder, onDone }: { target: CropTarget
 
   const save = async () => {
     if (!sourceImg) return;
+    if (!(await guardAgainstActivePack())) return;
     const outCanvas = document.createElement("canvas");
     outCanvas.width = targetWidth;
     outCanvas.height = targetHeight;
@@ -101,6 +104,7 @@ export function CropEditor({ target, cacheFolder, onDone }: { target: CropTarget
 
     const base64 = canvasToPngBase64(outCanvas);
     await window.fumbblApi.saveOverride(cacheFolder, url, base64, "png");
+    await window.fumbblApi.clearActivePack();
     onSaved();
     onDone();
   };

@@ -4,6 +4,7 @@ import { Button } from "../components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/select";
 import { cn } from "../lib/utils";
 import { useTranslation } from "../i18n/LanguageContext";
+import { useActivePackGuard } from "../hooks/useActivePackGuard";
 import { ATLAS_COLUMN_LABELS, canvasToPngBase64 } from "./AtlasBreakdown";
 
 export interface AtlasInfo {
@@ -37,6 +38,7 @@ export function PixelEditor({
   onDone: () => void;
 }) {
   const { t } = useTranslation();
+  const guardAgainstActivePack = useActivePackGuard();
   const { atlasInfo, url, onSaved } = target;
   const { canvas: sourceCanvas, cellSize, rows } = atlasInfo;
 
@@ -103,6 +105,7 @@ export function PixelEditor({
     const editCanvas = editCanvasRef.current;
     const working = workingCanvasRef.current;
     if (!editCanvas || !working) return;
+    if (!(await guardAgainstActivePack())) return;
     const workingCtx = working.getContext("2d")!;
     const r = Number(row);
     const c = Number(col);
@@ -110,6 +113,7 @@ export function PixelEditor({
     workingCtx.drawImage(editCanvas, 0, 0, cellSize * ZOOM, cellSize * ZOOM, c * cellSize, r * cellSize, cellSize, cellSize);
     const base64 = canvasToPngBase64(working);
     await window.fumbblApi.saveOverride(cacheFolder, url, base64, "png");
+    await window.fumbblApi.clearActivePack();
     onSaved();
     onDone();
   };

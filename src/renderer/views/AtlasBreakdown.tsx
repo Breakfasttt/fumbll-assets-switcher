@@ -3,6 +3,7 @@ import { Button } from "../components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "../components/ui/popover";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/select";
 import { useTranslation } from "../i18n/LanguageContext";
+import { useActivePackGuard } from "../hooks/useActivePackGuard";
 import type { AtlasInfo } from "./PixelEditor";
 
 export const ATLAS_COLUMN_LABELS = ["Home idle", "Home moving", "Away idle", "Away moving"];
@@ -53,6 +54,7 @@ export function AtlasBreakdown({
   onOpenEditor?: (atlasInfo: AtlasInfo, url: string, row: number, col: number, onSaved: () => void) => void;
 }) {
   const { t } = useTranslation();
+  const guardAgainstActivePack = useActivePackGuard();
   const [atlasInfo, setAtlasInfo] = useState<AtlasInfo | null>(null);
   const [cellThumbs, setCellThumbs] = useState<string[][]>([]);
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -89,6 +91,7 @@ export function AtlasBreakdown({
   if (!atlasInfo) return null;
 
   const applyUniformRow = async () => {
+    if (!(await guardAgainstActivePack())) return;
     const { canvas: sourceCanvas, cellSize, rows } = atlasInfo;
     const row = Number(chosenRow);
 
@@ -106,6 +109,7 @@ export function AtlasBreakdown({
 
     const base64 = canvasToPngBase64(outCanvas);
     await window.fumbblApi.saveOverride(cacheFolder, url, base64, "png");
+    await window.fumbblApi.clearActivePack();
     setPopoverOpen(false);
     onSaved();
   };

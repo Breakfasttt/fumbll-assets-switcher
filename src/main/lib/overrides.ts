@@ -77,6 +77,27 @@ export function overrideFilePath(fileName: string): string {
   return path.join(overridesDir(), fileName);
 }
 
+/**
+ * Registers (or refreshes) an override entry as active, pointing at a file
+ * that the caller has already placed in overridesDir() - used when activating
+ * a pack, where the file comes from the pack's own storage rather than a
+ * fresh user-provided buffer (see saveOverrideFile for the ad-hoc case).
+ */
+export async function registerActiveOverride(
+  cacheFolder: string,
+  url: string,
+  fileName: string,
+  packId: string | undefined
+): Promise<void> {
+  const index = await readIndex();
+  index[url] = { url, fileName, active: true, packId };
+  await writeIndex(index);
+
+  const format = fileName.split(".").pop() || "png";
+  const buffer = await fs.readFile(overrideFilePath(fileName));
+  await putImageInCache(cacheFolder, url, buffer, format);
+}
+
 const MIME_BY_EXT: Record<string, string> = {
   png: "image/png",
   jpg: "image/jpeg",

@@ -4,6 +4,7 @@ import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
 import { extractAssetId, getRostersUsingAsset, getRosterUsageIndexReady } from "../lib/rosters";
 import { useImageDimensions } from "../hooks/useImageDimensions";
+import { useActivePackGuard } from "../hooks/useActivePackGuard";
 import { useTranslation } from "../i18n/LanguageContext";
 import { OverrideEntry } from "../../shared/types";
 import { AtlasBreakdown } from "./AtlasBreakdown";
@@ -54,6 +55,7 @@ export function AssetPanel({
   promptContext,
 }: Props) {
   const { t } = useTranslation();
+  const guardAgainstActivePack = useActivePackGuard();
   const [defaultDataUrl, setDefaultDataUrl] = useState<string | null>(null);
   const [defaultError, setDefaultError] = useState<string | null>(null);
   const [override, setOverride] = useState<OverrideEntry | null>(null);
@@ -112,22 +114,29 @@ export function AssetPanel({
   const customActive = !!override?.active;
 
   const setActive = async (active: boolean) => {
+    if (!(await guardAgainstActivePack())) return;
     await window.fumbblApi.setOverrideActive(cacheFolder, url, active);
+    await window.fumbblApi.clearActivePack();
     await refreshOverride(url);
   };
 
   const handleDrop = async (file: File) => {
     if (onOpenCrop) {
+      // CropEditor guards + clears the active pack itself at actual save time.
       onOpenCrop(file, url, () => refreshOverride(url));
       return;
     }
+    if (!(await guardAgainstActivePack())) return;
     const { base64, format } = await fileToBase64(file);
     await window.fumbblApi.saveOverride(cacheFolder, url, base64, format);
+    await window.fumbblApi.clearActivePack();
     await refreshOverride(url);
   };
 
   const deleteOverride = async () => {
+    if (!(await guardAgainstActivePack())) return;
     await window.fumbblApi.deleteOverride(cacheFolder, url);
+    await window.fumbblApi.clearActivePack();
     await refreshOverride(url);
   };
 
