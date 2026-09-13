@@ -1,5 +1,12 @@
 import { contextBridge, ipcRenderer } from "electron";
-import { AppConfig, RosterInfo, DivisionRosterSummary, DetectedCoach, OverrideEntry } from "../shared/types";
+import {
+  AppConfig,
+  RosterInfo,
+  DivisionRosterSummary,
+  DetectedCoach,
+  OverrideEntry,
+  OrphanCacheFile,
+} from "../shared/types";
 
 const api = {
   loadConfig: (): Promise<AppConfig> => ipcRenderer.invoke("config:load"),
@@ -29,6 +36,14 @@ const api = {
     ipcRenderer.invoke("overrides:delete", folder, url),
   readOverrideImage: (url: string): Promise<string | null> =>
     ipcRenderer.invoke("overrides:readImage", url),
+  listInactiveOverrides: (): Promise<OverrideEntry[]> => ipcRenderer.invoke("overrides:listInactive"),
+
+  listOrphanCacheFiles: (folder: string): Promise<OrphanCacheFile[]> =>
+    ipcRenderer.invoke("cache:listOrphanFiles", folder),
+  readOrphanCacheFile: (folder: string, fileName: string): Promise<string | null> =>
+    ipcRenderer.invoke("cache:readOrphanFile", folder, fileName),
+  deleteOrphanCacheFile: (folder: string, fileName: string): Promise<void> =>
+    ipcRenderer.invoke("cache:deleteOrphanFile", folder, fileName),
 
   fetchRoster: (rosterId: number): Promise<RosterInfo> => ipcRenderer.invoke("fumbbl:fetchRoster", rosterId),
   fetchDivisionRosters: (divisionId: number): Promise<DivisionRosterSummary[]> =>

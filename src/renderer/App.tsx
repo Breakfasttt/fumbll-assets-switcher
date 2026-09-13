@@ -5,8 +5,9 @@ import { LanguageProvider, useTranslation } from "./i18n/LanguageContext";
 import { ConfigView } from "./views/ConfigView";
 import { RosterView } from "./views/RosterView";
 import { PitchView } from "./views/PitchView";
+import { OrphansView } from "./views/OrphansView";
 
-type Tab = "config" | "rosters" | "pitches";
+type Tab = "config" | "rosters" | "pitches" | "orphans";
 
 export function App() {
   return (
@@ -25,6 +26,7 @@ function AppShell() {
     { id: "config", label: t("app.tab.config") },
     { id: "rosters", label: t("app.tab.rosters") },
     { id: "pitches", label: t("app.tab.pitches") },
+    { id: "orphans", label: t("app.tab.orphans") },
   ];
 
   const effectiveTab: Tab = !cacheFolder ? "config" : activeTab;
@@ -79,6 +81,7 @@ function AppShell() {
         )}
         {effectiveTab === "rosters" && cacheFolder && <RosterView cacheFolder={cacheFolder} />}
         {effectiveTab === "pitches" && cacheFolder && <PitchView cacheFolder={cacheFolder} />}
+        {effectiveTab === "orphans" && cacheFolder && <OrphansView cacheFolder={cacheFolder} />}
       </main>
     </div>
   );

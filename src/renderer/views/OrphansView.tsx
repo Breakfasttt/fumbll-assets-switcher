@@ -1,0 +1,143 @@
+import { useEffect, useState } from "react";
+import { OverrideEntry, OrphanCacheFile } from "../../shared/types";
+import { Card, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { useTranslation } from "../i18n/LanguageContext";
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  return `${(bytes / 1024).toFixed(1)} KB`;
+}
+
+export function OrphansView({ cacheFolder }: { cacheFolder: string }) {
+  const { t } = useTranslation();
+  const [inactive, setInactive] = useState<OverrideEntry[]>([]);
+  const [orphanFiles, setOrphanFiles] = useState<OrphanCacheFile[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = async () => {
+    setLoading(true);
+    const [inactiveList, orphanList] = await Promise.all([
+      window.fumbblApi.listInactiveOverrides(),
+      window.fumbblApi.listOrphanCacheFiles(cacheFolder),
+    ]);
+    setInactive(inactiveList);
+    setOrphanFiles(orphanList);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cacheFolder]);
+
+  const deleteInactive = async (url: string) => {
+    await window.fumbblApi.deleteOverride(cacheFolder, url);
+    refresh();
+  };
+
+  const deleteOrphanFile = async (fileName: string) => {
+    await window.fumbblApi.deleteOrphanCacheFile(cacheFolder, fileName);
+    refresh();
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Card>
+        <CardTitle>{t("orphans.inactiveTitle")}</CardTitle>
+        <div className="mb-3 text-sm text-muted">{t("orphans.inactiveHint")}</div>
+        {loading ? (
+          <div className="text-sm text-muted">{t("roster.loading")}</div>
+        ) : inactive.length === 0 ? (
+          <div className="text-sm text-muted">{t("orphans.none")}</div>
+        ) : (
+          <div className="flex flex-wrap gap-3">
+            {inactive.map((entry) => (
+              <InactiveOverrideCard key={entry.url} entry={entry} onDelete={() => deleteInactive(entry.url)} />
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <Card>
+        <CardTitle>{t("orphans.filesTitle")}</CardTitle>
+        <div className="mb-3 text-sm text-muted">{t("orphans.filesHint")}</div>
+        {loading ? (
+          <div className="text-sm text-muted">{t("roster.loading")}</div>
+        ) : orphanFiles.length === 0 ? (
+          <div className="text-sm text-muted">{t("orphans.none")}</div>
+        ) : (
+          <div className="flex flex-wrap gap-3">
+            {orphanFiles.map((file) => (
+              <OrphanFileCard
+                key={file.fileName}
+                file={file}
+                cacheFolder={cacheFolder}
+                onDelete={() => deleteOrphanFile(file.fileName)}
+              />
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+function InactiveOverrideCard({ entry, onDelete }: { entry: OverrideEntry; onDelete: () => void }) {
+  const { t } = useTranslation();
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    window.fumbblApi.readOverrideImage(entry.url).then(setImageSrc);
+  }, [entry.url]);
+
+  return (
+    <div className="flex w-56 flex-col gap-2 rounded-lg border border-border-strong bg-card-raised p-3">
+      {imageSrc && (
+        <img
+          src={imageSrc}
+          className="h-24 w-full rounded bg-well object-contain"
+          style={{ imageRendering: "pixelated" }}
+        />
+      )}
+      <div className="break-all text-xs text-muted">{entry.url}</div>
+      <Button size="sm" variant="destructive" onClick={onDelete}>
+        {t("orphans.deleteButton")}
+      </Button>
+    </div>
+  );
+}
+
+function OrphanFileCard({
+  file,
+  cacheFolder,
+  onDelete,
+}: {
+  file: OrphanCacheFile;
+  cacheFolder: string;
+  onDelete: () => void;
+}) {
+  const { t } = useTranslation();
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    window.fumbblApi.readOrphanCacheFile(cacheFolder, file.fileName).then(setImageSrc);
+  }, [cacheFolder, file.fileName]);
+
+  return (
+    <div className="flex w-56 flex-col gap-2 rounded-lg border border-border-strong bg-card-raised p-3">
+      {imageSrc && (
+        <img
+          src={imageSrc}
+          className="h-24 w-full rounded bg-well object-contain"
+          style={{ imageRendering: "pixelated" }}
+        />
+      )}
+      <div className="text-xs text-muted">{file.fileName}</div>
+      <div className="text-xs text-faint">{formatSize(file.sizeBytes)}</div>
+      <Button size="sm" variant="destructive" onClick={onDelete}>
+        {t("orphans.deleteButton")}
+      </Button>
+    </div>
+  );
+}

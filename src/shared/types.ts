@@ -46,3 +46,8 @@ export interface OverrideEntry {
   fileName: string;
   active: boolean;
 }
+
+export interface OrphanCacheFile {
+  fileName: string;
+  sizeBytes: number;
+}

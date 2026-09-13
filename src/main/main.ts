@@ -2,9 +2,17 @@ import { app, BrowserWindow, ipcMain, dialog, shell } from "electron";
 import * as path from "path";
 import { loadConfig, saveConfig } from "./config";
 import { detectAllCoaches } from "./lib/registry";
-import { listCacheEntries, validateCacheFolder, readCachedImageDataUrl } from "./lib/cacheWriter";
+import {
+  listCacheEntries,
+  validateCacheFolder,
+  readCachedImageDataUrl,
+  listOrphanCacheFiles,
+  readCacheFileDataUrl,
+  deleteOrphanCacheFile,
+} from "./lib/cacheWriter";
 import {
   listOverrides,
+  listInactiveOverrides,
   getOverride,
   saveOverrideFile,
   setOverrideActive,
@@ -75,6 +83,11 @@ ipcMain.handle(
 );
 ipcMain.handle("overrides:delete", (_e, folder: string, url: string) => deleteOverride(folder, url));
 ipcMain.handle("overrides:readImage", (_e, url: string) => readOverrideImageDataUrl(url));
+ipcMain.handle("overrides:listInactive", () => listInactiveOverrides());
+
+ipcMain.handle("cache:listOrphanFiles", (_e, folder: string) => listOrphanCacheFiles(folder));
+ipcMain.handle("cache:readOrphanFile", (_e, folder: string, fileName: string) => readCacheFileDataUrl(folder, fileName));
+ipcMain.handle("cache:deleteOrphanFile", (_e, folder: string, fileName: string) => deleteOrphanCacheFile(folder, fileName));
 
 ipcMain.handle("fumbbl:fetchRoster", (_e, rosterId: number) => fetchRoster(rosterId));
 ipcMain.handle("fumbbl:fetchDivisionRosters", (_e, divisionId: number) => fetchDivisionRosters(divisionId));

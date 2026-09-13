@@ -1,6 +1,7 @@
 import { createHash } from "crypto";
 import { promises as fs } from "fs";
 import * as path from "path";
+import { OrphanCacheFile } from "../../shared/types";
 
 const MAP_FILE_NAME = "map.json";
 
@@ -80,6 +81,53 @@ export async function removeImageFromCache(cacheFolder: string, url: string): Pr
 
 export async function listCacheEntries(cacheFolder: string): Promise<Record<string, string>> {
   return readMapJson(cacheFolder);
+}
+
+/**
+ * Lists files physically present in the FFB cache folder that map.json no
+ * longer references - neither the real client nor our own tool would ever
+ * load these; safe residue to clean up (e.g. left behind after a manual edit
+ * of map.json, or a crash between writing the file and updating the index).
+ */
+export async function listOrphanCacheFiles(cacheFolder: string): Promise<OrphanCacheFile[]> {
+  const map = await readMapJson(cacheFolder);
+  const referenced = new Set(Object.values(map));
+
+  let entries: string[];
+  try {
+    entries = await fs.readdir(cacheFolder);
+  } catch {
+    return [];
+  }
+
+  const orphans: OrphanCacheFile[] = [];
+  for (const fileName of entries) {
+    if (fileName === MAP_FILE_NAME) continue;
+    if (referenced.has(fileName)) continue;
+    try {
+      const stat = await fs.stat(path.join(cacheFolder, fileName));
+      if (!stat.isFile()) continue;
+      orphans.push({ fileName, sizeBytes: stat.size });
+    } catch {
+      // file disappeared between readdir and stat; skip
+    }
+  }
+  return orphans;
+}
+
+export async function readCacheFileDataUrl(cacheFolder: string, fileName: string): Promise<string | null> {
+  try {
+    const buffer = await fs.readFile(path.join(cacheFolder, fileName));
+    const ext = fileName.split(".").pop()?.toLowerCase() || "png";
+    const mime = MIME_BY_EXT[ext] || "image/png";
+    return `data:${mime};base64,${buffer.toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
+export async function deleteOrphanCacheFile(cacheFolder: string, fileName: string): Promise<void> {
+  await fs.unlink(path.join(cacheFolder, fileName));
 }
 
 const MIME_BY_EXT: Record<string, string> = {

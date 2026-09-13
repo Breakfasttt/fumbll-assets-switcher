@@ -36,6 +36,12 @@ export async function listOverrides(): Promise<OverridesIndex> {
   return readIndex();
 }
 
+/** Overrides saved by the tool but not currently active in the FFB cache - the game shows the default asset instead. */
+export async function listInactiveOverrides(): Promise<OverrideEntry[]> {
+  const index = await readIndex();
+  return Object.values(index).filter((entry) => !entry.active);
+}
+
 export async function getOverride(url: string): Promise<OverrideEntry | null> {
   const index = await readIndex();
   return index[url] ?? null;
