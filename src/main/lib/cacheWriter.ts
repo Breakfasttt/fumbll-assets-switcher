@@ -30,6 +30,26 @@ async function writeMapJson(cacheFolder: string, map: Record<string, string>): P
   await fs.writeFile(mapPath, JSON.stringify(payload), "utf8");
 }
 
+// Several assets (e.g. a pitch's 5 weather variants) can be written concurrently
+// on app startup or view mount. Without serializing, two concurrent read-modify-write
+// cycles on map.json would race and the second writer would clobber the first
+// writer's entry. One queue per cache folder keeps them from stepping on each other.
+const mapJsonQueues = new Map<string, Promise<unknown>>();
+
+async function withMapJson<T>(cacheFolder: string, fn: (map: Record<string, string>) => Promise<T>): Promise<T> {
+  const previous = mapJsonQueues.get(cacheFolder) ?? Promise.resolve();
+  const task = previous.then(async () => {
+    const map = await readMapJson(cacheFolder);
+    const result = await fn(map);
+    await writeMapJson(cacheFolder, map);
+    return result;
+  });
+  // Swallow errors in the chain so one failed write doesn't wedge the queue for
+  // everyone after it; the caller of this specific call still sees its own error.
+  mapJsonQueues.set(cacheFolder, task.catch(() => undefined));
+  return task;
+}
+
 export async function validateCacheFolder(cacheFolder: string): Promise<boolean> {
   try {
     const stat = await fs.stat(cacheFolder);
@@ -57,20 +77,20 @@ export async function putImageInCache(
   const fileName = `${hash}.${format}`;
   await fs.writeFile(path.join(cacheFolder, fileName), imageBuffer);
 
-  const map = await readMapJson(cacheFolder);
-  map[url] = fileName;
-  await writeMapJson(cacheFolder, map);
+  await withMapJson(cacheFolder, async (map) => {
+    map[url] = fileName;
+  });
 
   return { hash, fileName };
 }
 
 export async function removeImageFromCache(cacheFolder: string, url: string): Promise<void> {
-  const map = await readMapJson(cacheFolder);
-  const fileName = map[url];
+  const fileName = await withMapJson(cacheFolder, async (map) => {
+    const existing = map[url];
+    delete map[url];
+    return existing;
+  });
   if (!fileName) return;
-
-  delete map[url];
-  await writeMapJson(cacheFolder, map);
 
   try {
     await fs.unlink(path.join(cacheFolder, fileName));

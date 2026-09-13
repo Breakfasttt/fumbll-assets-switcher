@@ -3,7 +3,7 @@ import { Button } from "../components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "../components/ui/popover";
 import { useTranslation } from "../i18n/LanguageContext";
 
-export function PromptPopover({ buildPrompt }: { buildPrompt: () => string }) {
+export function PromptPopover({ buildPrompt, hint }: { buildPrompt: () => string; hint?: string }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -30,7 +30,7 @@ export function PromptPopover({ buildPrompt }: { buildPrompt: () => string }) {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-96">
-        <div className="mb-2 text-xs text-muted">{t("assetPanel.promptHint")}</div>
+        <div className="mb-2 text-xs text-muted">{hint ?? t("assetPanel.promptHint")}</div>
         <textarea
           readOnly
           value={prompt}

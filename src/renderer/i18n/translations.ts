@@ -95,8 +95,16 @@ const en: Dictionary = {
   "cropEditor.cancelButton": "Cancel",
 
   "pitch.title": "Pitches by weather",
-  "pitch.urlPlaceholder": "Pitch base URL (e.g. https://cdn.fumbbl.com/FUMBBL/Images/Pitches/Default.zip)",
-  "pitch.alert.missingUrl": "Enter the pitch base URL first.",
+  "pitch.selectPlaceholder": "Choose a pitch...",
+  "pitch.group.roster": "Roster pitches",
+  "pitch.group.special": "Special pitches",
+  "pitch.group.system": "System pitches",
+  "pitch.noSelection": "Choose a pitch above to customize its weather variants.",
+  "weather.heat": "Heat",
+  "weather.sunny": "Sunny",
+  "weather.nice": "Nice",
+  "weather.rain": "Rain",
+  "weather.blizzard": "Blizzard",
 };
 
 const fr: Dictionary = {
@@ -184,9 +192,17 @@ const fr: Dictionary = {
   "cropEditor.saveButton": "Valider et recadrer",
   "cropEditor.cancelButton": "Annuler",
 
-  "pitch.title": "Pitches (terrains) par météo",
-  "pitch.urlPlaceholder": "URL du pitch (ex: https://cdn.fumbbl.com/FUMBBL/Images/Pitches/Default.zip)",
-  "pitch.alert.missingUrl": "Renseignez d'abord l'URL de base du pitch.",
+  "pitch.title": "Terrains par météo",
+  "pitch.selectPlaceholder": "Choisir un terrain...",
+  "pitch.group.roster": "Terrains par roster",
+  "pitch.group.special": "Terrains spéciaux",
+  "pitch.group.system": "Terrains système",
+  "pitch.noSelection": "Choisissez un terrain ci-dessus pour personnaliser ses variantes météo.",
+  "weather.heat": "Canicule",
+  "weather.sunny": "Ensoleillé",
+  "weather.nice": "Beau temps",
+  "weather.rain": "Pluie",
+  "weather.blizzard": "Blizzard",
 };
 
 const es: Dictionary = {
@@ -275,8 +291,16 @@ const es: Dictionary = {
   "cropEditor.cancelButton": "Cancelar",
 
   "pitch.title": "Campos por clima",
-  "pitch.urlPlaceholder": "URL base del campo (ej: https://cdn.fumbbl.com/FUMBBL/Images/Pitches/Default.zip)",
-  "pitch.alert.missingUrl": "Introduce primero la URL base del campo.",
+  "pitch.selectPlaceholder": "Elige un campo...",
+  "pitch.group.roster": "Campos por plantilla",
+  "pitch.group.special": "Campos especiales",
+  "pitch.group.system": "Campos del sistema",
+  "pitch.noSelection": "Elige un campo arriba para personalizar sus variantes de clima.",
+  "weather.heat": "Calor",
+  "weather.sunny": "Soleado",
+  "weather.nice": "Buen tiempo",
+  "weather.rain": "Lluvia",
+  "weather.blizzard": "Ventisca",
 };
 
 const de: Dictionary = {
@@ -365,8 +389,16 @@ const de: Dictionary = {
   "cropEditor.cancelButton": "Abbrechen",
 
   "pitch.title": "Spielfelder nach Wetter",
-  "pitch.urlPlaceholder": "Basis-URL des Spielfelds (z.B. https://cdn.fumbbl.com/FUMBBL/Images/Pitches/Default.zip)",
-  "pitch.alert.missingUrl": "Bitte zuerst die Basis-URL des Spielfelds angeben.",
+  "pitch.selectPlaceholder": "Spielfeld wählen...",
+  "pitch.group.roster": "Spielfelder nach Roster",
+  "pitch.group.special": "Spezielle Spielfelder",
+  "pitch.group.system": "System-Spielfelder",
+  "pitch.noSelection": "Wähle oben ein Spielfeld, um seine Wettervarianten anzupassen.",
+  "weather.heat": "Hitze",
+  "weather.sunny": "Sonnig",
+  "weather.nice": "Schönwetter",
+  "weather.rain": "Regen",
+  "weather.blizzard": "Schneesturm",
 };
 
 export const TRANSLATIONS: Record<Language, Dictionary> = { en, fr, es, de };

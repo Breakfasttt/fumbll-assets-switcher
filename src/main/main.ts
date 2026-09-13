@@ -9,6 +9,7 @@ import {
   listOrphanCacheFiles,
   readCacheFileDataUrl,
   deleteOrphanCacheFile,
+  putImageInCache,
 } from "./lib/cacheWriter";
 import {
   listOverrides,
@@ -20,7 +21,7 @@ import {
   readOverrideImageDataUrl,
   showOverrideInFolder,
 } from "./lib/overrides";
-import { fetchRoster, fetchDivisionRosters, fetchAssetImageDataUrl } from "./lib/fumbblApi";
+import { fetchRoster, fetchDivisionRosters, fetchAssetImageDataUrl, fetchAssetImageBuffer } from "./lib/fumbblApi";
 import { WEATHER_CODES } from "../shared/types";
 
 const isDev = !app.isPackaged;
@@ -103,12 +104,21 @@ ipcMain.handle("fumbbl:weatherCodes", () => WEATHER_CODES);
 // Skipped once an override is active for this URL: at that point the cache
 // entry is our own custom file, not the original FUMBBL asset, so reading it
 // here would show the custom image in the "default" slot.
+// When neither is available, we hit the FUMBBL CDN ourselves - and since we're
+// already downloading the original asset, we persist it into the real cache
+// folder too, exactly like the official client would, so it's there next time
+// and the "default" slot never re-downloads it.
 ipcMain.handle("fumbbl:fetchAssetImage", async (_e, folder: string | null, url: string) => {
   if (folder) {
     const override = await getOverride(url);
     if (!override?.active) {
       const cached = await readCachedImageDataUrl(folder, url);
       if (cached) return cached;
+
+      const image = await fetchAssetImageBuffer(url);
+      if (!image) return null;
+      await putImageInCache(folder, url, image.buffer, image.format);
+      return readCachedImageDataUrl(folder, url);
     }
   }
   return fetchAssetImageDataUrl(url);
