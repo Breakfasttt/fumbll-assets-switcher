@@ -1,6 +1,10 @@
+export const LANGUAGES = ["en", "fr", "es", "de"] as const;
+export type Language = (typeof LANGUAGES)[number];
+
 export interface AppConfig {
   cacheFolder: string | null;
   coachName: string | null;
+  language: Language;
 }
 
 export interface RosterPosition {

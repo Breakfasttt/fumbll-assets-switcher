@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "../components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "../components/ui/popover";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/select";
+import { useTranslation } from "../i18n/LanguageContext";
 import type { AtlasInfo } from "./PixelEditor";
 
 export const ATLAS_COLUMN_LABELS = ["Home idle", "Home moving", "Away idle", "Away moving"];
@@ -10,7 +11,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("Impossible de charger l'image"));
+    img.onerror = () => reject(new Error("Could not load the image"));
     img.src = src;
   });
 }
@@ -51,6 +52,7 @@ export function AtlasBreakdown({
   onSaved: () => void;
   onOpenEditor?: (atlasInfo: AtlasInfo, url: string, row: number, col: number, onSaved: () => void) => void;
 }) {
+  const { t } = useTranslation();
   const [atlasInfo, setAtlasInfo] = useState<AtlasInfo | null>(null);
   const [cellThumbs, setCellThumbs] = useState<string[][]>([]);
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -110,7 +112,7 @@ export function AtlasBreakdown({
 
   return (
     <div>
-      <div className="mb-2 text-xs text-muted">Détail des cases de l'iconset</div>
+      <div className="mb-2 text-xs text-muted">{t("atlas.cellsDetailLabel")}</div>
 
       <div className="mb-2 flex items-center gap-2">
         <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
@@ -120,11 +122,11 @@ export function AtlasBreakdown({
               disabled={atlasInfo.rows <= 1}
               onClick={() => setChosenRow("0")}
             >
-              Répéter une variante
+              {t("atlas.repeatVariantButton")}
             </Button>
           </PopoverTrigger>
           <PopoverContent>
-            <div className="mb-2 text-xs text-muted">Variante à répéter sur toutes les lignes</div>
+            <div className="mb-2 text-xs text-muted">{t("atlas.repeatVariantHint")}</div>
             <Select value={chosenRow} onValueChange={setChosenRow}>
               <SelectTrigger>
                 <SelectValue />
@@ -132,24 +134,24 @@ export function AtlasBreakdown({
               <SelectContent>
                 {Array.from({ length: atlasInfo.rows }, (_, r) => (
                   <SelectItem key={r} value={String(r)}>
-                    Ligne {r + 1}
+                    {t("atlas.rowLabel", { n: r + 1 })}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <div className="mt-2 flex gap-2">
               <Button size="sm" onClick={applyUniformRow}>
-                Appliquer
+                {t("atlas.applyButton")}
               </Button>
               <Button size="sm" variant="outline" onClick={() => setPopoverOpen(false)}>
-                Annuler
+                {t("atlas.cancelButton")}
               </Button>
             </div>
           </PopoverContent>
         </Popover>
       </div>
 
-      <div className="text-xs text-muted mb-2">Cliquer une case pour la dessiner</div>
+      <div className="text-xs text-muted mb-2">{t("atlas.clickCellHint")}</div>
 
       <div className="flex flex-col gap-2">
         {cellThumbs.map((rowThumbs, row) => (
@@ -158,7 +160,7 @@ export function AtlasBreakdown({
               <div key={col} className="flex flex-col items-center gap-0.5">
                 <img
                   src={thumb}
-                  title={`${ATLAS_COLUMN_LABELS[col]} — ligne ${row + 1}`}
+                  title={t("atlas.cellTitle", { label: ATLAS_COLUMN_LABELS[col], n: row + 1 })}
                   onClick={() => onOpenEditor?.(atlasInfo, url, row, col, onSaved)}
                   className="h-12 w-12 cursor-pointer rounded border border-border bg-well hover:border-accent"
                   style={{ imageRendering: "pixelated" }}

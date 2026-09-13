@@ -1,5 +1,9 @@
 import { Card, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/select";
+import { useTranslation } from "../i18n/LanguageContext";
+import { LANGUAGES } from "../../shared/types";
+import { LANGUAGE_NAMES } from "../i18n/translations";
 
 export function ConfigView({
   cacheFolder,
@@ -8,22 +12,26 @@ export function ConfigView({
   cacheFolder: string | null;
   onConfigured: (folder: string) => void;
 }) {
+  const { t, language, setLanguage } = useTranslation();
+
   const detect = async () => {
     const coaches = await window.fumbblApi.detectCoaches();
     const valid = coaches.filter((c) => c.cachePath);
     if (valid.length === 0) {
-      alert("Aucun coach FUMBBL avec cache local détecté dans le registre.");
+      alert(t("config.alert.noCoachDetected"));
       return;
     }
     const chosen = valid[0];
     if (valid.length > 1) {
       alert(
-        "Plusieurs coachs détectés, utilisation du premier :\n" +
-          valid.map((c) => `${c.coachName} -> ${c.cachePath}`).join("\n")
+        t("config.alert.multipleCoaches", {
+          list: valid.map((c) => `${c.coachName} -> ${c.cachePath}`).join("\n"),
+        })
       );
     }
     if (!chosen?.cachePath) return;
-    await window.fumbblApi.saveConfig({ cacheFolder: chosen.cachePath, coachName: chosen.coachName });
+    const current = await window.fumbblApi.loadConfig();
+    await window.fumbblApi.saveConfig({ ...current, cacheFolder: chosen.cachePath, coachName: chosen.coachName });
     onConfigured(chosen.cachePath);
   };
 
@@ -32,25 +40,44 @@ export function ConfigView({
     if (!folder) return;
     const ok = await window.fumbblApi.validateCacheFolder(folder);
     if (!ok) {
-      alert("Dossier invalide ou non inscriptible.");
+      alert(t("config.alert.invalidFolder"));
       return;
     }
-    await window.fumbblApi.saveConfig({ cacheFolder: folder, coachName: null });
+    const current = await window.fumbblApi.loadConfig();
+    await window.fumbblApi.saveConfig({ ...current, cacheFolder: folder, coachName: null });
     onConfigured(folder);
   };
 
   return (
-    <Card>
-      <CardTitle>Dossier Local Icon Cache</CardTitle>
-      <div className={cacheFolder ? "text-[#4ade80]" : "text-[#f43f5e]"}>
-        {cacheFolder ? `Dossier actuel : ${cacheFolder}` : "Aucun dossier configuré"}
-      </div>
-      <div className="mt-3 flex gap-2">
-        <Button onClick={detect}>Auto-détecter (registre Windows)</Button>
-        <Button variant="outline" onClick={selectManually}>
-          Choisir un dossier manuellement
-        </Button>
-      </div>
-    </Card>
+    <div className="flex flex-col gap-4">
+      <Card>
+        <CardTitle>{t("config.languageLabel")}</CardTitle>
+        <Select value={language} onValueChange={(v) => setLanguage(v as typeof language)}>
+          <SelectTrigger className="w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {LANGUAGES.map((lang) => (
+              <SelectItem key={lang} value={lang}>
+                {LANGUAGE_NAMES[lang]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Card>
+
+      <Card>
+        <CardTitle>{t("config.title")}</CardTitle>
+        <div className={cacheFolder ? "text-[#4ade80]" : "text-[#f43f5e]"}>
+          {cacheFolder ? t("config.currentFolder", { folder: cacheFolder }) : t("config.noFolder")}
+        </div>
+        <div className="mt-3 flex gap-2">
+          <Button onClick={detect}>{t("config.detectButton")}</Button>
+          <Button variant="outline" onClick={selectManually}>
+            {t("config.selectManualButton")}
+          </Button>
+        </div>
+      </Card>
+    </div>
   );
 }

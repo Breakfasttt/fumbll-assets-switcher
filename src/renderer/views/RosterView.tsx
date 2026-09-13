@@ -5,6 +5,7 @@ import { Button } from "../components/ui/button";
 import { Checkbox } from "../components/ui/checkbox";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/select";
 import { BB2025_ROSTER_IDS, fetchAllRosters, indexRosterUsage } from "../lib/rosters";
+import { useTranslation } from "../i18n/LanguageContext";
 import { PlayerEditor } from "./PlayerEditor";
 
 interface RosterSummary {
@@ -13,6 +14,7 @@ interface RosterSummary {
 }
 
 export function RosterView({ cacheFolder }: { cacheFolder: string }) {
+  const { t } = useTranslation();
   const [allRosters, setAllRosters] = useState<RosterSummary[]>([]);
   const [loadingList, setLoadingList] = useState(true);
   const [showSpecial, setShowSpecial] = useState(false);
@@ -54,11 +56,13 @@ export function RosterView({ cacheFolder }: { cacheFolder: string }) {
   return (
     <div className="flex flex-col gap-4">
       <Card>
-        <CardTitle>Rosters</CardTitle>
+        <CardTitle>{t("roster.title")}</CardTitle>
         <div className="flex flex-wrap items-center gap-2">
           <Select value={selectedRosterId} onValueChange={setSelectedRosterId}>
             <SelectTrigger className="w-56">
-              <SelectValue placeholder={loadingList ? "Chargement..." : "Choisir un roster"} />
+              <SelectValue
+                placeholder={loadingList ? t("roster.selectPlaceholder.loading") : t("roster.selectPlaceholder.choose")}
+              />
             </SelectTrigger>
             <SelectContent>
               {visibleRosters.map((r) => (
@@ -69,18 +73,22 @@ export function RosterView({ cacheFolder }: { cacheFolder: string }) {
             </SelectContent>
           </Select>
           <Button onClick={loadRoster} disabled={!selectedRosterId}>
-            Charger le roster
+            {t("roster.loadButton")}
           </Button>
           <label className="flex items-center gap-2 text-sm text-muted">
             <Checkbox checked={showSpecial} onCheckedChange={(v) => setShowSpecial(v === true)} />
-            Rosters spéciaux (hors BB2025)
+            {t("roster.specialCheckbox")}
           </label>
         </div>
-        {loadingRoster && <div className="mt-2 text-sm text-muted">Chargement...</div>}
-        {error && <div className="mt-2 text-sm text-[#f43f5e]">Erreur : {error}</div>}
+        {loadingRoster && <div className="mt-2 text-sm text-muted">{t("roster.loading")}</div>}
+        {error && <div className="mt-2 text-sm text-[#f43f5e]">{t("roster.errorPrefix", { error })}</div>}
         {roster && (
           <div className="mt-2 text-sm text-muted">
-            {roster.name} (base: {roster.baseIconPath}) — {roster.positions.length} positions
+            {t("roster.summaryLine", {
+              name: roster.name,
+              baseIconPath: roster.baseIconPath,
+              count: roster.positions.length,
+            })}
           </div>
         )}
       </Card>

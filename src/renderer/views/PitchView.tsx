@@ -2,6 +2,7 @@ import { useState } from "react";
 import { WEATHER_CODES, WeatherCode } from "../../shared/types";
 import { Card, CardTitle } from "../components/ui/card";
 import { cn } from "../lib/utils";
+import { useTranslation } from "../i18n/LanguageContext";
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   let binary = "";
@@ -13,13 +14,14 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 }
 
 export function PitchView({ cacheFolder }: { cacheFolder: string }) {
+  const { t } = useTranslation();
   const [baseUrl, setBaseUrl] = useState("");
   const [thumbs, setThumbs] = useState<Record<string, string>>({});
   const [dragOverCode, setDragOverCode] = useState<WeatherCode | null>(null);
 
   const handleDrop = async (code: WeatherCode, file: File) => {
     if (!baseUrl.trim()) {
-      alert("Renseignez d'abord l'URL de base du pitch.");
+      alert(t("pitch.alert.missingUrl"));
       return;
     }
     const fullUrl = `${baseUrl.trim()}?pitch=${code}`;
@@ -32,12 +34,12 @@ export function PitchView({ cacheFolder }: { cacheFolder: string }) {
 
   return (
     <Card>
-      <CardTitle>Pitches (terrains) par météo</CardTitle>
+      <CardTitle>{t("pitch.title")}</CardTitle>
       <input
         type="text"
         value={baseUrl}
         onChange={(e) => setBaseUrl(e.target.value)}
-        placeholder="URL du pitch (ex: https://cdn.fumbbl.com/FUMBBL/Images/Pitches/Default.zip)"
+        placeholder={t("pitch.urlPlaceholder")}
         className="mb-3 w-full max-w-xl rounded border border-border-strong bg-input px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       />
       <div className="flex flex-wrap gap-2">

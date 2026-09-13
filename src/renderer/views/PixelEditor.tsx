@@ -3,6 +3,7 @@ import { Card, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/select";
 import { cn } from "../lib/utils";
+import { useTranslation } from "../i18n/LanguageContext";
 import { ATLAS_COLUMN_LABELS, canvasToPngBase64 } from "./AtlasBreakdown";
 
 export interface AtlasInfo {
@@ -35,6 +36,7 @@ export function PixelEditor({
   cacheFolder: string;
   onDone: () => void;
 }) {
+  const { t } = useTranslation();
   const { atlasInfo, url, onSaved } = target;
   const { canvas: sourceCanvas, cellSize, rows } = atlasInfo;
 
@@ -114,10 +116,10 @@ export function PixelEditor({
 
   return (
     <Card>
-      <CardTitle>Éditeur pixel art</CardTitle>
+      <CardTitle>{t("pixelEditor.title")}</CardTitle>
 
       <div className="mb-3 flex items-center gap-2">
-        <span className="text-sm text-muted">Case :</span>
+        <span className="text-sm text-muted">{t("pixelEditor.cellLabel")}</span>
         <Select value={row} onValueChange={setRow}>
           <SelectTrigger className="w-28">
             <SelectValue />
@@ -125,7 +127,7 @@ export function PixelEditor({
           <SelectContent>
             {Array.from({ length: rows }, (_, r) => (
               <SelectItem key={r} value={String(r)}>
-                Ligne {r + 1}
+                {t("atlas.rowLabel", { n: r + 1 })}
               </SelectItem>
             ))}
           </SelectContent>
@@ -172,14 +174,14 @@ export function PixelEditor({
           />
         ))}
         <Button size="sm" variant="outline" onClick={() => setColor("transparent")}>
-          Gomme
+          {t("pixelEditor.eraserButton")}
         </Button>
       </div>
 
       <div className="flex gap-2">
-        <Button onClick={save}>Valider et sauvegarder l'atlas</Button>
+        <Button onClick={save}>{t("pixelEditor.saveButton")}</Button>
         <Button variant="outline" onClick={onDone}>
-          Annuler
+          {t("pixelEditor.cancelButton")}
         </Button>
       </div>
     </Card>

@@ -3,6 +3,8 @@ import { Card, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
 import { extractAssetId, getRostersUsingAsset, getRosterUsageIndexReady } from "../lib/rosters";
+import { useImageDimensions } from "../hooks/useImageDimensions";
+import { useTranslation } from "../i18n/LanguageContext";
 import { OverrideEntry } from "../../shared/types";
 import { AtlasBreakdown } from "./AtlasBreakdown";
 import type { AtlasInfo } from "./PixelEditor";
@@ -30,9 +32,11 @@ interface Props {
   cacheFolder: string;
   showAtlasBreakdown?: boolean;
   onOpenEditor?: (atlasInfo: AtlasInfo, url: string, row: number, col: number, onSaved: () => void) => void;
+  onOpenCrop?: (file: File, url: string, onSaved: () => void) => void;
 }
 
-export function AssetPanel({ label, url, cacheFolder, showAtlasBreakdown, onOpenEditor }: Props) {
+export function AssetPanel({ label, url, cacheFolder, showAtlasBreakdown, onOpenEditor, onOpenCrop }: Props) {
+  const { t } = useTranslation();
   const [defaultDataUrl, setDefaultDataUrl] = useState<string | null>(null);
   const [defaultError, setDefaultError] = useState<string | null>(null);
   const [override, setOverride] = useState<OverrideEntry | null>(null);
@@ -59,7 +63,7 @@ export function AssetPanel({ label, url, cacheFolder, showAtlasBreakdown, onOpen
       .fetchAssetImage(cacheFolder, url)
       .then((dataUrl) => {
         if (!dataUrl) {
-          setDefaultError("Échec du téléchargement");
+          setDefaultError(t("assetPanel.downloadError"));
           return;
         }
         setDefaultDataUrl(dataUrl);
@@ -76,7 +80,7 @@ export function AssetPanel({ label, url, cacheFolder, showAtlasBreakdown, onOpen
     return (
       <Card>
         <CardTitle>{label}</CardTitle>
-        <div className="text-sm text-muted">Non disponible pour ce joueur.</div>
+        <div className="text-sm text-muted">{t("assetPanel.unavailable")}</div>
       </Card>
     );
   }
@@ -91,6 +95,10 @@ export function AssetPanel({ label, url, cacheFolder, showAtlasBreakdown, onOpen
   };
 
   const handleDrop = async (file: File) => {
+    if (onOpenCrop) {
+      onOpenCrop(file, url, () => refreshOverride(url));
+      return;
+    }
     const { base64, format } = await fileToBase64(file);
     await window.fumbblApi.saveOverride(cacheFolder, url, base64, format);
     await refreshOverride(url);
@@ -107,13 +115,17 @@ export function AssetPanel({ label, url, cacheFolder, showAtlasBreakdown, onOpen
     <Card>
       <CardTitle>{label}</CardTitle>
       <div className="mb-3 text-sm text-muted">
-        {usedBy && usedBy.size > 0 ? `Utilisé par : ${[...usedBy].sort().join(", ")}` : usedBy === undefined ? "Utilisé par : ..." : ""}
+        {usedBy && usedBy.size > 0
+          ? t("assetPanel.usedByPrefix", { list: [...usedBy].sort().join(", ") })
+          : usedBy === undefined
+            ? t("assetPanel.usedByLoading")
+            : ""}
       </div>
 
       <div className="flex flex-wrap items-start gap-4">
         <div className="flex gap-2">
           <AssetSlot
-            title="Par défaut"
+            title={t("assetPanel.slot.default")}
             subtitle={`#${assetId}`}
             imageSrc={defaultDataUrl}
             error={defaultError}
@@ -121,7 +133,7 @@ export function AssetPanel({ label, url, cacheFolder, showAtlasBreakdown, onOpen
             onClick={() => override && setActive(false)}
           />
           <DropSlot
-            title="Custom"
+            title={t("assetPanel.slot.custom")}
             imageSrc={overrideDataUrl}
             active={customActive}
             dragOver={dragOver}
@@ -165,6 +177,8 @@ function AssetSlot({
   active: boolean;
   onClick: () => void;
 }) {
+  const dims = useImageDimensions(imageSrc);
+
   return (
     <div
       role="button"
@@ -190,6 +204,11 @@ function AssetSlot({
       )}
       <div className="text-xs text-muted">{title}</div>
       <div className="text-xs text-faint">{subtitle}</div>
+      {dims && (
+        <div className="text-xs text-faint">
+          {dims.width}×{dims.height} px
+        </div>
+      )}
     </div>
   );
 }
@@ -215,6 +234,9 @@ function DropSlot({
   onClick: () => void;
   onDelete?: () => void;
 }) {
+  const { t } = useTranslation();
+  const dims = useImageDimensions(imageSrc);
+
   return (
     <div
       role="button"
@@ -257,10 +279,15 @@ function DropSlot({
         <img src={imageSrc} className="h-24 w-24 rounded bg-well object-contain" style={{ imageRendering: "pixelated" }} />
       ) : (
         <div className="flex h-24 w-24 items-center justify-center rounded bg-well text-center text-xs text-faint">
-          Glisser une image ici
+          {t("assetPanel.dropPlaceholder")}
         </div>
       )}
       <div className="text-xs text-muted">{title}</div>
+      {dims && (
+        <div className="text-xs text-faint">
+          {dims.width}×{dims.height} px
+        </div>
+      )}
     </div>
   );
 }

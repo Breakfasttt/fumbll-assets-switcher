@@ -7,7 +7,7 @@ function configPath(): string {
   return path.join(app.getPath("userData"), "config.json");
 }
 
-const DEFAULT_CONFIG: AppConfig = { cacheFolder: null, coachName: null };
+const DEFAULT_CONFIG: AppConfig = { cacheFolder: null, coachName: null, language: "en" };
 
 export async function loadConfig(): Promise<AppConfig> {
   try {

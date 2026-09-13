@@ -13,6 +13,7 @@ const api = {
     ipcRenderer.invoke("cache:validateFolder", folder),
   listCacheEntries: (folder: string): Promise<Record<string, string>> =>
     ipcRenderer.invoke("cache:listEntries", folder),
+  openCacheFolder: (folder: string): Promise<string> => ipcRenderer.invoke("cache:openFolder", folder),
 
   listOverrides: (): Promise<Record<string, OverrideEntry>> => ipcRenderer.invoke("overrides:list"),
   getOverride: (url: string): Promise<OverrideEntry | null> => ipcRenderer.invoke("overrides:get", url),

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
+import { app, BrowserWindow, ipcMain, dialog, shell } from "electron";
 import * as path from "path";
 import { loadConfig, saveConfig } from "./config";
 import { detectAllCoaches } from "./lib/registry";
@@ -60,6 +60,7 @@ ipcMain.handle("dialog:selectFolder", async () => {
 
 ipcMain.handle("cache:validateFolder", (_e, folder: string) => validateCacheFolder(folder));
 ipcMain.handle("cache:listEntries", (_e, folder: string) => listCacheEntries(folder));
+ipcMain.handle("cache:openFolder", (_e, folder: string) => shell.openPath(folder));
 
 ipcMain.handle("overrides:list", () => listOverrides());
 ipcMain.handle("overrides:get", (_e, url: string) => getOverride(url));
