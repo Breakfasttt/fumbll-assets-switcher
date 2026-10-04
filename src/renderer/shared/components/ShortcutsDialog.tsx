@@ -9,6 +9,7 @@ import { useTranslation } from "@/shared/i18n/LanguageContext";
 export function ShortcutsDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const { t } = useTranslation();
   const rows: [string, string][] = [
+    ["Ctrl+K", t("shortcuts.palette")],
     ["Ctrl+1 … Ctrl+5", t("shortcuts.tabs")],
     ["Ctrl+Z", t("shortcuts.undo")],
     ["?", t("shortcuts.help")],

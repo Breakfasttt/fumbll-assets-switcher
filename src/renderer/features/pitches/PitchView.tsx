@@ -2,14 +2,10 @@ import { useMemo, useState } from "react";
 import { WeatherCode } from "@common/types";
 import { Card, CardTitle } from "@/shared/ui/card";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup, SelectLabel } from "@/shared/ui/select";
-import { cn } from "@/shared/lib/utils";
 import { useTranslation } from "@/shared/i18n/LanguageContext";
-import { useImageDimensions } from "@/shared/hooks/useImageDimensions";
-import { useActivePackGuard } from "@/shared/hooks/useActivePackGuard";
-import { useOverrideUndo } from "@/shared/hooks/useOverrideUndo";
-import { useDefaultAsset, useOverride, useRosterList } from "@/shared/api/queries";
-import { useClearActivePack, useDeleteOverride, useSetOverrideActive } from "@/shared/api/mutations";
-import { ImageZoomButton } from "@/shared/components/ImageZoomModal";
+import { useAssetSlot } from "@/shared/hooks/useAssetSlot";
+import { useRosterList } from "@/shared/api/queries";
+import { AssetSlotPair } from "@/shared/components/AssetSlotPair";
 import { CropEditor, type CropTarget } from "@/shared/components/CropEditor";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 import {
@@ -112,8 +108,7 @@ export function PitchView({ cacheFolder }: { cacheFolder: string }) {
 }
 
 // Real pitch images are 782x452 px. Half that size still leaves the slots
-// crisp while fitting two side by side in the panel.
-const THUMB_WIDTH = 391;
+// readable while fitting two side by side in the panel.
 const THUMB_HEIGHT = 226;
 
 function PitchWeatherSlot({
@@ -128,174 +123,24 @@ function PitchWeatherSlot({
   onOpenCrop: (imageSrc: string, url: string) => void;
 }) {
   const { t } = useTranslation();
-  const guardAgainstActivePack = useActivePackGuard();
-  const notifyOverrideUndo = useOverrideUndo();
-  const setOverrideActive = useSetOverrideActive();
-  const removeOverride = useDeleteOverride();
-  const clearActivePack = useClearActivePack();
-  const defaultAsset = useDefaultAsset(cacheFolder, url);
-  const overrideData = useOverride(url).data;
-  const [dragOver, setDragOver] = useState(false);
-
-  const defaultDataUrl = defaultAsset.data ?? null;
-  const defaultError = defaultAsset.error
-    ? defaultAsset.error.message
-    : defaultAsset.data === null
-      ? t("assetPanel.downloadError")
-      : null;
-  const override = overrideData?.entry ?? null;
-  const overrideDataUrl = overrideData?.image ?? null;
-
-  const defaultActive = !override || !override.active;
-  const customActive = !!override?.active;
-  const activeDataUrl = defaultActive ? defaultDataUrl : overrideDataUrl;
-  const activeDims = useImageDimensions(activeDataUrl);
-
-  const setActive = async (active: boolean) => {
-    if (!(await guardAgainstActivePack())) return;
-    await setOverrideActive.mutateAsync({ cacheFolder, url, active });
-    await clearActivePack.mutateAsync();
-  };
-
-  const handleDrop = (file: File) => {
-    // CropEditor guards + clears the active pack itself at actual save time.
-    onOpenCrop(URL.createObjectURL(file), url);
-  };
-
-  const deleteOverride = async () => {
-    if (!(await guardAgainstActivePack())) return;
-    const versionId = await removeOverride.mutateAsync({ cacheFolder, url });
-    await clearActivePack.mutateAsync();
-    notifyOverrideUndo(t("assetPanel.deletedToast"), { cacheFolder, url, versionId });
-  };
+  const slot = useAssetSlot(cacheFolder, url);
 
   return (
-    <div className="flex flex-wrap items-center gap-4 rounded-lg border border-border-strong p-3">
-      <div className="flex min-w-[140px] flex-col gap-1">
-        <div className="text-sm font-medium text-foreground">{t(`weather.${weather}`)}</div>
-        <div className="truncate text-xs text-faint-foreground" title={url}>
+    <section className="flex flex-col gap-3 rounded-lg border border-border-strong p-3" data-weather={weather}>
+      <div className="flex items-baseline gap-2">
+        <h3 className="m-0 text-sm font-semibold text-foreground">{t(`weather.${weather}`)}</h3>
+        <span className="truncate font-mono text-xs text-faint-foreground" title={url}>
           {url.split("/").pop()}
-        </div>
-        {activeDims && (
-          <div className="text-xs tabular-nums text-faint-foreground">
-            {activeDims.width}×{activeDims.height} px
-          </div>
-        )}
+        </span>
       </div>
-
-      <div className="flex gap-2">
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => override && setActive(false)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") override && setActive(false);
-          }}
-          className={cn(
-            "relative flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-border-strong bg-surface p-2 hover:border-faint-foreground",
-            defaultActive && "border-primary bg-surface-raised"
-          )}
-          style={{ width: THUMB_WIDTH + 16 }}
-        >
-          {defaultActive && (
-            <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-live shadow-[0_0_0_2px_var(--color-surface)]" />
-          )}
-          {activeDataUrlOrDefault(defaultDataUrl, defaultError)}
-          <div className="text-xs text-faint-foreground">{t("assetPanel.slot.default")}</div>
-        </div>
-
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => override && !override.active && setActive(true)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") override && !override.active && setActive(true);
-          }}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragOver(true);
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragOver(false);
-            const file = e.dataTransfer.files?.[0];
-            if (file) handleDrop(file);
-          }}
-          className={cn(
-            "relative flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed border-border-strong bg-surface p-2",
-            (dragOver || customActive) && "border-primary bg-surface-raised"
-          )}
-          style={{ width: THUMB_WIDTH + 16 }}
-        >
-          {customActive && (
-            <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-live shadow-[0_0_0_2px_var(--color-surface)]" />
-          )}
-          {override && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                deleteOverride();
-              }}
-              className="absolute right-1 top-1 z-10 rounded bg-danger px-1.5 py-0.5 text-xs text-danger-foreground hover:bg-danger-hover"
-            >
-              ✕
-            </button>
-          )}
-          {overrideDataUrl ? (
-            <div className="relative">
-              <img
-                src={overrideDataUrl}
-                className="rounded bg-well object-contain"
-                style={{ width: THUMB_WIDTH, height: THUMB_HEIGHT, imageRendering: "pixelated" }}
-              />
-              <ImageZoomButton imageSrc={overrideDataUrl} reveal={{ kind: "override", ref: url }} />
-            </div>
-          ) : (
-            <div
-              className="flex items-center justify-center rounded bg-well text-center text-xs text-faint-foreground"
-              style={{ width: THUMB_WIDTH, height: THUMB_HEIGHT }}
-            >
-              {t("assetPanel.dropPlaceholder")}
-            </div>
-          )}
-          <div className="text-xs text-faint-foreground">{t("assetPanel.slot.custom")}</div>
-          {overrideDataUrl && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenCrop(overrideDataUrl, url);
-              }}
-              className="rounded border border-border-strong px-2 py-0.5 text-xs text-muted-foreground hover:bg-surface-raised hover:text-foreground"
-            >
-              {t("assetPanel.recropButton")}
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
+      <AssetSlotPair
+        slot={slot}
+        aspectRatio={PITCH_WIDTH / PITCH_HEIGHT}
+        thumbHeight={THUMB_HEIGHT}
+        // Always cropped: CropEditor guards + clears the active pack itself at save time.
+        onFile={(file) => onOpenCrop(URL.createObjectURL(file), url)}
+        onRecrop={(imageSrc) => onOpenCrop(imageSrc, url)}
+      />
+    </section>
   );
-
-  function activeDataUrlOrDefault(dataUrl: string | null, error: string | null) {
-    if (dataUrl) {
-      return (
-        <div className="relative">
-          <img
-            src={dataUrl}
-            className="rounded bg-well object-contain"
-            style={{ width: THUMB_WIDTH, height: THUMB_HEIGHT, imageRendering: "pixelated" }}
-          />
-          <ImageZoomButton imageSrc={dataUrl} />
-        </div>
-      );
-    }
-    return (
-      <div
-        className="flex items-center justify-center rounded bg-well text-center text-xs text-faint-foreground"
-        style={{ width: THUMB_WIDTH, height: THUMB_HEIGHT }}
-      >
-        {error ?? "..."}
-      </div>
-    );
-  }
 }

@@ -12,31 +12,31 @@ Un `AssetPanel` = un asset (URL FUMBBL) avec deux slots : **Défaut** (image FUM
 
 | Fichier | Rôle |
 |---|---|
-| `src/renderer/features/asset-editor/AssetPanel.tsx` | `AssetPanel` (chargement défaut + override, setActive, drop, delete, prompt) ; sous-composants `AssetSlot` (défaut) et `DropSlot` (custom, zone de dépôt, ✕, « Recadrer ») ; `fileToBase64` |
+| `src/renderer/features/asset-editor/AssetPanel.tsx` | `AssetPanel` : carte titre + `PromptPopover`, `useAssetSlot` + `AssetSlotPair` partagés (vignettes 147 px de haut pour le portrait = taille réelle, 96 px pour l'iconset), `AtlasBreakdown` sous la paire pour l'iconset (image **active**) |
 | `src/renderer/features/asset-editor/PromptPopover.tsx` | bouton « Générer un prompt IA » → Popover textarea lecture seule + « Copier » |
 | `src/renderer/features/asset-editor/imagePrompt.ts` | `buildPortraitPrompt(ctx, w, h)`, `buildIconsetPrompt(ctx, cellSize, rows)` |
 | `src/renderer/features/asset-editor/index.ts` | API publique : `AssetPanel` |
 
-Dépendances : `@/features/iconset` (`AtlasBreakdown` affiché sous les slots si `showAtlasBreakdown`), `shared/components/ImageZoomModal`, `shared/hooks/useActivePackGuard`, `useOverrideUndo`, `useImageDimensions`, `shared/api` (queries/mutations), `shared/lib/rosters` (`extractAssetId`).
+Dépendances : `@/features/iconset` (`AtlasBreakdown` affiché sous la paire si `showAtlasBreakdown`), `shared/components/AssetSlotPair`, `shared/hooks/useAssetSlot` (queries + mutations + garde pack + undo), `useImageDimensions` (prompt), `shared/api` (`useRosterUsageIndex`), `shared/lib/rosters` (`extractAssetId`).
 
 ## Comportement
 
-- Données via `shared/api` : `useDefaultAsset(cacheFolder, url)` (cache FFB d'abord, sinon CDN — voir **main-ipc**), `useOverride(url)` (entrée + image), `useRosterUsageIndex()` (« Utilisé par »). Plus de `refreshOverride` : les mutations invalident `override(url)`, donc tout slot monté sur la même URL (autre onglet, crop, éditeur pixel) se met à jour seul.
-- Cliquer un slot = l'activer (`useSetOverrideActive`). Toute mutation : `guardAgainstActivePack()` puis `useClearActivePack()`.
-- Drop : portrait → `onOpenCrop` (le crop sauve lui-même) ; iconset → `useSaveOverride` direct, toast « Override remplacé » + Annuler si une version existait (`undoVersionId`).
-- ✕ : `useDeleteOverride` puis toast « Override supprimé » + Annuler (`useOverrideUndo` → `useRestoreOverride`).
-- Props de rappel (`onOpenEditor`, `onOpenCrop`, `onRecropExisting`, sans `onSaved`) : l'ouverture des éditeurs est déléguée au conteneur (`rosters/PlayerDetail`).
+- Données et mutations : `useAssetSlot(cacheFolder, url)` (voir **shared-ui**) — `useDefaultAsset` (cache FFB d'abord, sinon CDN), `useOverride`, mutations qui invalident `override(url)` : tout slot monté sur la même URL (autre onglet, crop, éditeur pixel) se met à jour seul.
+- Image en jeu = choix **explicite** dans le ToggleGroup « Défaut | Custom » de `AssetSlotPair` (Custom désactivé tant qu'il n'y a pas d'override). Vignettes non cliquables. Toute mutation : `guardAgainstActivePack()` puis `useClearActivePack()`.
+- Fichier (drop sur la vignette custom, « Choisir un fichier… », « Remplacer ») : portrait → `onOpenCrop` (le crop sauve lui-même) ; iconset → `slot.saveFile` direct, toast « Override remplacé » + Annuler si une version existait.
+- Supprimer (IconButton) : sans confirmation, toast « Override supprimé » + Annuler. Menu ⋯ : afficher dans le dossier, copier l'URL de l'asset.
+- « Partagé par » (`useRosterUsageIndex`, skeleton pendant le chargement) + avertissement si l'asset sert à plus d'un roster (le roster courant, `promptContext.rosterName`, est exclu de la liste « change aussi »).
+- Props de rappel (`onOpenEditor`, `onOpenCrop`, `onRecropExisting`) : l'ouverture des éditeurs est déléguée au conteneur (`rosters/PlayerDetail`).
 
 ## Pièges connus
 
-- `ImageZoomButton` est imbriqué dans le slot cliquable : il stoppe lui-même la propagation (clic + clavier, portal de la Dialog inclus). Tout nouveau bouton placé dans un slot doit faire pareil (`e.stopPropagation()`), en attendant la refonte #22.
-- `div role=button` + `<button>` imbriqués ; ✕ texte sans `aria-label`.
-- Logique quasi identique dupliquée dans `features/pitches/PitchView.tsx` (`PitchWeatherSlot`) : à factoriser dans un composant partagé lors de la refonte.
-- Affordance faible : l'état actif n'est signalé que par bordure + pastille orange.
+- Toute évolution des slots se fait dans `shared/components/AssetSlotPair.tsx` (aussi utilisé par **pitches**) : vérifier les deux écrans.
+- Le crop des portraits reste en panneau latéral (`PlayerDetail`) alors que celui des terrains est en Dialog → #23.
+- Activer Défaut/Custom n'a pas encore de toast « Annuler » (§2.9) : réversible d'un clic dans le ToggleGroup.
 
 ## Cible UX (validée)
 
-Composant unique `AssetSlotPair` (portrait/iconset/terrain) : ToggleGroup « Défaut | Custom » explicite, vignettes non cliquables sur damier, dropzone + « Choisir un fichier… », actions IconButton + menu ⋯, undo par toast ; crop unifié en Dialog (react-easy-crop) ; visionneuse avec comparaison.
+Composant unique `AssetSlotPair` (portrait/iconset/terrain) : ToggleGroup « Défaut | Custom » explicite, vignettes non cliquables sur fond uni `bg-well` (fait en #22), dropzone + « Choisir un fichier… », actions IconButton + menu ⋯, undo par toast ; crop unifié en Dialog (react-easy-crop) ; visionneuse avec comparaison.
 Détail : `docs/ux-research.md` §4.3.
 
 ## Cartes

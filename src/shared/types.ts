@@ -1,10 +1,22 @@
 export const LANGUAGES = ["en", "fr", "es", "de"] as const;
 export type Language = (typeof LANGUAGES)[number];
 
+/** Where the user left the app, restored on next launch (saved as they navigate). */
+export interface UiMemory {
+  lastTab?: string;
+  lastRosterId?: number;
+  showSpecialRosters?: boolean;
+  lastPositionName?: string;
+  lastPitchKey?: string;
+  /** Command palette entries used last (ids, newest first). */
+  recentCommands?: string[];
+}
+
 export interface AppConfig {
   cacheFolder: string | null;
   coachName: string | null;
   language: Language;
+  ui?: UiMemory;
 }
 
 export interface RosterPosition {

@@ -1,4 +1,4 @@
-import { Ghost, LandPlot, Package, Settings, Users, type LucideIcon } from "lucide-react";
+import { Ghost, LandPlot, Package, Search, Settings, Users, type LucideIcon } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import { isPitchUrl } from "@/shared/lib/format";
 import { useInactiveOverrides, useOrphanFiles, useOverrides } from "@/shared/api/queries";
@@ -30,18 +30,32 @@ export function Sidebar({
   activeTab,
   onSelect,
   cacheFolder,
+  locked,
+  onOpenPalette,
 }: {
   activeTab: Tab;
   onSelect: (tab: Tab) => void;
   cacheFolder: string | null;
+  /** No valid cache folder yet: only Config is reachable. */
+  locked: boolean;
+  onOpenPalette: () => void;
 }) {
   const { t } = useTranslation();
   const badges = useTabBadges(cacheFolder);
-  const locked = !cacheFolder;
 
   return (
     <aside className="flex min-h-0 flex-col gap-4 border-r border-border bg-sidebar p-3">
       <div className="px-2 pt-1 text-sm font-semibold">{t("app.title")}</div>
+      <button
+        type="button"
+        disabled={locked}
+        onClick={onOpenPalette}
+        className="flex items-center gap-2 rounded border border-border-strong bg-field px-2.5 py-1.5 text-left text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+      >
+        <Search className="size-3.5" strokeWidth={1.75} />
+        <span className="flex-1">{t("palette.searchButton")}</span>
+        <Kbd>Ctrl+K</Kbd>
+      </button>
       <nav aria-label={t("app.navLabel")} className="flex flex-col gap-0.5">
         {TAB_ORDER.map((tab, i) => {
           const Icon = ICONS[tab];

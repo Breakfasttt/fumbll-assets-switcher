@@ -63,6 +63,7 @@ export default {
     "tailwind-merge": { scope: "renderer", reason: "cn()" },
     "lucide-react": { scope: "renderer", reason: "icônes" },
     "@tanstack/react-query": { scope: "renderer", reason: "couche données : cache + invalidation des ressources IPC (shared/api), utilisée par toutes les features" },
+    cmdk: { scope: "renderer", reason: "palette Ctrl+K (shared/components/CommandPalette) puis listes filtrables rosters/terrains (#21, #27)" },
     sonner: { scope: "renderer", reason: "toasts : succès/erreur/promesse/annuler (shared/lib/notify.ts), remplace alert()" },
     // --- Build / outillage
     vite: { scope: "build", reason: "bundler renderer" },
@@ -101,6 +102,6 @@ export default {
   // Violations connues tolérées, chacune rattachée à la carte qui doit la corriger.
   // `count` = nombre exact de violations tolérées : plus (nouveau code) ou moins (count à baisser) fait échouer.
   baseline: [
-    { rule: "ipc-unused", file: "src/main/preload.ts", card: 22, count: 2 },
+    { rule: "ipc-unused", file: "src/main/preload.ts", card: 30, count: 2 },
   ],
 };

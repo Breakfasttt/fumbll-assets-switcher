@@ -11,17 +11,18 @@ description: Feature "config" de fumbbl-assets-switcher — langue de l'interfac
 
 | Fichier | Rôle |
 |---|---|
-| `src/renderer/features/config/ConfigView.tsx` | 3 cartes : langue (Select), dossier cache (statut + « Auto-détecter » / « Choisir manuellement »), guide setup statique 4 étapes |
+| `src/renderer/features/config/ConfigView.tsx` | deux états. **Onboarding** (cache absent/invalide) : stepper 3 étapes (`Step` local : done/current/todo), message `config.folderMissing` si le dossier configuré a disparu. **Paramètres** (cache valide) : dossier (mono), coach, « Relancer la détection » / « Choisir un autre dossier… ». Puis la langue (Select) |
 | `src/renderer/features/config/index.ts` | API publique : `ConfigView` |
 
-Dépendances partagées : `shared/i18n/LanguageContext` (`language`, `setLanguage`), `shared/i18n/translations` (`LANGUAGE_NAMES`), `@common/types` (`LANGUAGES`), `shared/hooks/useCacheFolder` (côté App).
+Dépendances partagées : `shared/i18n/LanguageContext` (`language`, `setLanguage`), `shared/i18n/translations` (`LANGUAGE_NAMES`), `@common/types` (`LANGUAGES`), `shared/api` (`useConfig`, `useCacheValid` côté App).
 
 ## Comportement actuel
 
-- `detect()` : `fumbblApi.detectCoaches()` → garde les coachs avec `cachePath` → prend **le premier** ; toast d'erreur si aucun, toast d'avertissement listant les coachs si plusieurs ; toast de succès une fois configuré. Sauve `{cacheFolder, coachName}` via `useSaveConfig`.
-- `selectManually()` : `selectFolder()` → `validateCacheFolder()` (présence de `map.json` / dossier valide) → sauve `{cacheFolder, coachName: null}` via `useSaveConfig`.
-- `useSaveConfig` met à jour le cache `config` : App relit `cacheFolder` via `useCacheFolder` ; `onConfigured()` bascule sur l'onglet Rosters.
-- La langue est lue via `useConfig` et sauvée par `LanguageContext.setLanguage` → `useSaveConfig({language})`.
+- Affiché d'office (autres onglets verrouillés) tant qu'aucun dossier cache **valide** n'est configuré.
+- `detect()` : `detectCoaches()` → coachs avec `cachePath` affichés en **choix radio** (le dossier actuel présélectionné et marqué « actuel ») ; **rien n'est enregistré** avant « Utiliser ce dossier ». Aucun coach → `EmptyState` + aide.
+- `selectManually()` : `selectFolder()` → `validateCacheFolder()` ; invalide → message **inline** (pas de toast).
+- `applyFolder()` : si un dossier valide est déjà configuré et qu'on en change → `confirm` (AlertDialog « Changer de dossier »). Puis `useSaveConfig`, toast de succès, `onConfigured()` → onglet Rosters.
+- La langue est sauvée par `LanguageContext.setLanguage`.
 
 ## IPC utilisés
 
@@ -30,7 +31,6 @@ Dépendances partagées : `shared/i18n/LanguageContext` (`language`, `setLanguag
 ## Pièges connus
 
 - `useSaveConfig(patch)` fusionne avec la config en cache puis réécrit tout `config.json`. `coachName` n'est relu nulle part.
-- Plusieurs coachs détectés : le premier gagne sans choix utilisateur.
 - Auto-détection Windows uniquement.
 
 ## Cible UX (validée)

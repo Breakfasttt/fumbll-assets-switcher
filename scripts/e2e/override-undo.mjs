@@ -3,26 +3,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { launchApp, sleep } from "../lib/app-driver.mjs";
+import { clickInPair, dropPngOnZone, openRoster } from "./helpers.mjs";
 const OUT = fileURLToPath(new URL("../../.screenshots", import.meta.url));
 const assert = (c, m) => {
   if (!c) throw new Error("ÉCHEC : " + m);
   console.log("ok  " + m);
 };
-
-// Drop a generated PNG (solid color, 4x2 cells of 30px) on the n-th custom drop zone.
-const dropPng = (color, zoneIndex) => `(async () => {
-  const c = document.createElement("canvas"); c.width = 120; c.height = 60;
-  const g = c.getContext("2d"); g.fillStyle = ${JSON.stringify(color)}; g.fillRect(0, 0, 120, 60);
-  const blob = await new Promise((r) => c.toBlob(r, "image/png"));
-  const file = new File([blob], "test.png", { type: "image/png" });
-  const zones = [...document.querySelectorAll("main div.border-dashed")];
-  const zone = zones[${zoneIndex}];
-  if (!zone) return "no zone (" + zones.length + ")";
-  const dt = new DataTransfer(); dt.items.add(file);
-  zone.dispatchEvent(new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer: dt }));
-  zone.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: dt }));
-  return "dropped";
-})()`;
 
 const app = await launchApp({ sandbox: true, port: 9335 });
 const overridesJson = () => {
@@ -32,15 +18,10 @@ const overridesJson = () => {
 const toasts = () => app.evaluate(`[...document.querySelectorAll("[data-sonner-toast]")].map((t) => t.innerText.replace(/\\s+/g, " ").trim())`);
 try {
   await app.click("Rosters");
-  await sleep(1500);
-  await app.evaluate(`document.querySelector("main button[role=combobox]").click()`);
-  await sleep(600);
-  await app.click("Human", { within: "[role=listbox]" });
-  await app.waitFor(`document.querySelectorAll("main div.border-dashed").length >= 2`, 20000);
-  await sleep(2500);
+  await openRoster(app, "Human");
 
   // Zone 1 = iconset custom (zone 0 = portrait, which opens the crop editor).
-  assert((await app.evaluate(dropPng("#cc2222", 1))) === "dropped", "drop iconset #1");
+  assert((await dropPngOnZone(app, "#cc2222", 1)) === "dropped", "drop iconset #1");
   await sleep(2500);
   let idx = overridesJson();
   const url = Object.keys(idx)[0];
@@ -48,7 +29,7 @@ try {
   const firstFile = fs.readFileSync(path.join(app.sandbox.userData, "overrides", idx[url].fileName));
   assert((await toasts()).length === 0, "pas de toast d'annulation pour une création (rien remplacé)");
 
-  assert((await app.evaluate(dropPng("#2222cc", 1))) === "dropped", "drop iconset #2 (remplacement)");
+  assert((await dropPngOnZone(app, "#2222cc", 1)) === "dropped", "drop iconset #2 (remplacement)");
   await sleep(2500);
   let t = await toasts();
   console.log("    toasts :", t);
@@ -62,8 +43,8 @@ try {
   const restored = fs.readFileSync(path.join(app.sandbox.userData, "overrides", overridesJson()[url].fileName));
   assert(restored.equals(firstFile), "Annuler restaure la 1re image");
 
-  // Delete via the ✕ button of the custom slot, then undo.
-  await app.evaluate(`[...document.querySelectorAll("main button")].filter((b) => b.textContent.trim() === "✕")[0].click()`);
+  // Delete via the custom slot's "Supprimer" icon button, then undo.
+  assert(await clickInPair(app, "slot-delete", 1), "bouton Supprimer de l'iconset");
   await sleep(2500);
   assert(!overridesJson()[url], "override supprimé");
   t = await toasts();

@@ -19,6 +19,10 @@ Feature **conteneur** : elle compose `asset-editor` et `iconset` (déclaré dans
 
 Dépendances : `@/features/asset-editor` (`AssetPanel`), `@/features/iconset` (`PixelEditor`, `AtlasInfo`, `EditorTarget`), `shared/components/CropEditor`, `shared/api/queries`, `shared/lib/rosters` (`BB2025_ROSTER_IDS`).
 
+## Mémoire de navigation
+
+Roster choisi, case « spéciaux » et position sélectionnée sont mémorisés (`useUiMemory` : `lastRosterId`, `showSpecialRosters`, `lastPositionName`) et restaurés au lancement. `PlayerEditor` est monté avec `key={roster.id}` : sans ça, revenir sur un roster déjà en cache gardait la position de l'ancien roster.
+
 ## Données
 
 - `useRosterList()` (`staleTime: Infinity`) → `fetchAllRosters()` interroge les divisions `[1,2,3,5,10,200]` et dédoublonne par nom ; `BB2025_ROSTER_IDS` codé en dur (31 ids).

@@ -127,8 +127,11 @@ export function useSaveConfig() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: async (patch: Partial<AppConfig>) => {
-      const current = await client.fetchQuery(configQuery);
-      const next: AppConfig = { ...current, ...patch };
+      // Read the cache synchronously when loaded: two saves fired back to back
+      // (e.g. navigation + palette recents) must compose, not overwrite each other.
+      const current = client.getQueryData<AppConfig>(queryKeys.config) ?? (await client.fetchQuery(configQuery));
+      // `ui` is merged one level deep: each view remembers its own fields.
+      const next: AppConfig = { ...current, ...patch, ui: patch.ui ? { ...current.ui, ...patch.ui } : current.ui };
       client.setQueryData(queryKeys.config, next);
       await window.fumbblApi.saveConfig(next);
       return next;

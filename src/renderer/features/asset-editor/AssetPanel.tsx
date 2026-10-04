@@ -1,35 +1,14 @@
-import { useState } from "react";
 import { Card, CardTitle } from "@/shared/ui/card";
-import { cn } from "@/shared/lib/utils";
 import { extractAssetId } from "@/shared/lib/rosters";
 import { useImageDimensions } from "@/shared/hooks/useImageDimensions";
-import { useActivePackGuard } from "@/shared/hooks/useActivePackGuard";
-import { useOverrideUndo } from "@/shared/hooks/useOverrideUndo";
-import { useDefaultAsset, useOverride, useRosterUsageIndex } from "@/shared/api/queries";
-import { useClearActivePack, useDeleteOverride, useSaveOverride, useSetOverrideActive } from "@/shared/api/mutations";
+import { useAssetSlot } from "@/shared/hooks/useAssetSlot";
+import { useRosterUsageIndex } from "@/shared/api/queries";
 import { useTranslation } from "@/shared/i18n/LanguageContext";
+import { AssetSlotPair } from "@/shared/components/AssetSlotPair";
 import { AtlasBreakdown } from "@/features/iconset";
 import { PromptPopover } from "./PromptPopover";
-import { ImageZoomButton } from "@/shared/components/ImageZoomModal";
 import { buildPortraitPrompt, buildIconsetPrompt, type PromptContext } from "./imagePrompt";
 import type { AtlasInfo } from "@/features/iconset";
-
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  let binary = "";
-  const bytes = new Uint8Array(buffer);
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
-
-async function fileToBase64(file: File): Promise<{ base64: string; format: string }> {
-  const buffer = await file.arrayBuffer();
-  return {
-    base64: arrayBufferToBase64(buffer),
-    format: (file.name.split(".").pop() || "png").toLowerCase(),
-  };
-}
 
 interface Props {
   label: string;
@@ -44,6 +23,10 @@ interface Props {
   promptContext?: PromptContext;
 }
 
+// Portraits (95x147) show at their real size; iconsets stay compact so the pair fits a narrow column.
+const THUMB_HEIGHT = 147;
+const ICONSET_THUMB_HEIGHT = 96;
+
 export function AssetPanel({
   label,
   url,
@@ -56,32 +39,10 @@ export function AssetPanel({
   promptContext,
 }: Props) {
   const { t } = useTranslation();
-  const guardAgainstActivePack = useActivePackGuard();
-  const notifyOverrideUndo = useOverrideUndo();
-  const saveOverride = useSaveOverride();
-  const setOverrideActive = useSetOverrideActive();
-  const removeOverride = useDeleteOverride();
-  const clearActivePack = useClearActivePack();
-  const defaultAsset = useDefaultAsset(cacheFolder, url);
-  const overrideData = useOverride(url).data;
+  const slot = useAssetSlot(cacheFolder, url);
   const usageIndex = useRosterUsageIndex().data;
-  const [dragOver, setDragOver] = useState(false);
-
-  const defaultDataUrl = defaultAsset.data ?? null;
-  const defaultError = defaultAsset.error
-    ? defaultAsset.error.message
-    : defaultAsset.data === null
-      ? t("assetPanel.downloadError")
-      : null;
-  const override = overrideData?.entry ?? null;
-  const overrideDataUrl = overrideData?.image ?? null;
-  const usedBy = url && usageIndex ? (usageIndex.get(url) ?? []) : undefined;
-
-  // Must run on every render (Rules of Hooks) even when `url` is null, so
-  // this is computed before the early return below.
-  const defaultActive = !override || !override.active;
-  const activeDataUrl = defaultActive ? defaultDataUrl : overrideDataUrl;
-  const activeDims = useImageDimensions(activeDataUrl);
+  // Must run on every render (Rules of Hooks) even when `url` is null.
+  const activeDims = useImageDimensions(slot.activeImage);
 
   if (!url) {
     return (
@@ -91,35 +52,6 @@ export function AssetPanel({
       </Card>
     );
   }
-
-  const assetId = extractAssetId(url);
-  const customActive = !!override?.active;
-
-  const setActive = async (active: boolean) => {
-    if (!(await guardAgainstActivePack())) return;
-    await setOverrideActive.mutateAsync({ cacheFolder, url, active });
-    await clearActivePack.mutateAsync();
-  };
-
-  const handleDrop = async (file: File) => {
-    if (onOpenCrop) {
-      // CropEditor guards + clears the active pack itself at actual save time.
-      onOpenCrop(file, url);
-      return;
-    }
-    if (!(await guardAgainstActivePack())) return;
-    const { base64, format } = await fileToBase64(file);
-    const result = await saveOverride.mutateAsync({ cacheFolder, url, base64, format });
-    await clearActivePack.mutateAsync();
-    notifyOverrideUndo(t("assetPanel.replacedToast"), { cacheFolder, url, versionId: result.undoVersionId });
-  };
-
-  const deleteOverride = async () => {
-    if (!(await guardAgainstActivePack())) return;
-    const versionId = await removeOverride.mutateAsync({ cacheFolder, url });
-    await clearActivePack.mutateAsync();
-    notifyOverrideUndo(t("assetPanel.deletedToast"), { cacheFolder, url, versionId });
-  };
 
   const buildPrompt = () => {
     if (!promptContext) return "";
@@ -135,237 +67,34 @@ export function AssetPanel({
 
   return (
     <Card>
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex items-center justify-between gap-2">
         <CardTitle className="mb-0">{label}</CardTitle>
         {promptContext && <PromptPopover buildPrompt={buildPrompt} />}
       </div>
-      <div className="mb-3 text-sm text-muted-foreground">
-        {usedBy && usedBy.length > 0
-          ? t("assetPanel.usedByPrefix", { list: usedBy.join(", ") })
-          : usedBy === undefined
-            ? t("assetPanel.usedByLoading")
-            : ""}
-      </div>
 
-      <div className="flex flex-wrap items-start gap-4">
-        <div className="flex gap-2">
-          <AssetSlot
-            title={t("assetPanel.slot.default")}
-            subtitle={`#${assetId}`}
-            imageSrc={defaultDataUrl}
-            error={defaultError}
-            active={defaultActive}
-            aspectRatio={slotAspectRatio}
-            onClick={() => override && setActive(false)}
-          />
-          <DropSlot
-            title={t("assetPanel.slot.custom")}
-            imageSrc={overrideDataUrl}
-            url={url}
-            active={customActive}
-            aspectRatio={slotAspectRatio}
-            dragOver={dragOver}
-            onDragOver={() => setDragOver(true)}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={(file) => {
-              setDragOver(false);
-              handleDrop(file);
-            }}
-            onClick={() => override && !override.active && setActive(true)}
-            onDelete={override ? deleteOverride : undefined}
-            onRecrop={
-              onRecropExisting && overrideDataUrl
-                ? () => onRecropExisting(overrideDataUrl, url)
-                : undefined
-            }
-          />
-        </div>
+      <AssetSlotPair
+        slot={slot}
+        aspectRatio={slotAspectRatio}
+        thumbHeight={showAtlasBreakdown ? ICONSET_THUMB_HEIGHT : THUMB_HEIGHT}
+        defaultCaption={`#${extractAssetId(url)}`}
+        // Portrait: the crop editor guards + clears the active pack itself at save time.
+        onFile={onOpenCrop ? (file) => onOpenCrop(file, url) : undefined}
+        onRecrop={onRecropExisting ? (imageSrc) => onRecropExisting(imageSrc, url) : undefined}
+        sharedBy={usageIndex ? (usageIndex.get(url) ?? []) : null}
+        owner={promptContext?.rosterName}
+      />
 
-        {showAtlasBreakdown && activeDataUrl && (
+      {showAtlasBreakdown && slot.activeImage && (
+        <div className="mt-4">
           <AtlasBreakdown
-            imgSrc={activeDataUrl}
-            imageSource={customActive ? "custom" : "default"}
+            imgSrc={slot.activeImage}
+            imageSource={slot.customActive ? "custom" : "default"}
             url={url}
             cacheFolder={cacheFolder}
             onOpenEditor={onOpenEditor}
           />
-        )}
-      </div>
+        </div>
+      )}
     </Card>
-  );
-}
-
-const SLOT_THUMB_HEIGHT = 96;
-
-function AssetSlot({
-  title,
-  subtitle,
-  imageSrc,
-  error,
-  active,
-  aspectRatio,
-  onClick,
-}: {
-  title: string;
-  subtitle: string;
-  imageSrc: string | null;
-  error: string | null;
-  active: boolean;
-  aspectRatio: number;
-  onClick: () => void;
-}) {
-  const dims = useImageDimensions(imageSrc);
-  const thumbWidth = SLOT_THUMB_HEIGHT * aspectRatio;
-
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onClick();
-      }}
-      className={cn(
-        "relative flex min-h-[160px] cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-border-strong bg-surface p-3 hover:border-faint-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
-        active && "border-primary bg-surface-raised"
-      )}
-      style={{ width: thumbWidth + 24 }}
-    >
-      {active && (
-        <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-live shadow-[0_0_0_2px_var(--color-surface)]" />
-      )}
-      {imageSrc ? (
-        <div className="relative">
-          <img
-            src={imageSrc}
-            className="rounded bg-well object-contain"
-            style={{ width: thumbWidth, height: SLOT_THUMB_HEIGHT, imageRendering: "pixelated" }}
-          />
-          <ImageZoomButton imageSrc={imageSrc} />
-        </div>
-      ) : (
-        <div
-          className="flex items-center justify-center rounded bg-well text-center text-xs text-faint-foreground"
-          style={{ width: thumbWidth, height: SLOT_THUMB_HEIGHT }}
-        >
-          {error ?? "..."}
-        </div>
-      )}
-      <div className="text-xs text-muted-foreground">{title}</div>
-      <div className="text-xs text-faint-foreground">{subtitle}</div>
-      {dims && (
-        <div className="text-xs tabular-nums text-faint-foreground">
-          {dims.width}×{dims.height} px
-        </div>
-      )}
-    </div>
-  );
-}
-
-function DropSlot({
-  title,
-  imageSrc,
-  url,
-  active,
-  aspectRatio,
-  dragOver,
-  onDragOver,
-  onDragLeave,
-  onDrop,
-  onClick,
-  onDelete,
-  onRecrop,
-}: {
-  title: string;
-  imageSrc: string | null;
-  url: string;
-  active: boolean;
-  aspectRatio: number;
-  dragOver: boolean;
-  onDragOver: () => void;
-  onDragLeave: () => void;
-  onDrop: (file: File) => void;
-  onClick: () => void;
-  onDelete?: () => void;
-  onRecrop?: () => void;
-}) {
-  const { t } = useTranslation();
-  const dims = useImageDimensions(imageSrc);
-  const thumbWidth = SLOT_THUMB_HEIGHT * aspectRatio;
-
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onClick();
-      }}
-      onDragOver={(e) => {
-        e.preventDefault();
-        onDragOver();
-      }}
-      onDragLeave={onDragLeave}
-      onDrop={(e) => {
-        e.preventDefault();
-        const file = e.dataTransfer.files?.[0];
-        if (file) onDrop(file);
-      }}
-      className={cn(
-        "relative flex min-h-[160px] cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed border-border-strong bg-surface p-3 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
-        (dragOver || active) && "border-primary bg-surface-raised",
-        !imageSrc && "border-dashed"
-      )}
-      style={{ width: thumbWidth + 24 }}
-    >
-      {active && (
-        <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-live shadow-[0_0_0_2px_var(--color-surface)]" />
-      )}
-      {onDelete && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          className="absolute right-1 top-1 z-10 rounded bg-danger px-1.5 py-0.5 text-xs text-danger-foreground hover:bg-danger-hover"
-        >
-          ✕
-        </button>
-      )}
-      {imageSrc ? (
-        <div className="relative">
-          <img
-            src={imageSrc}
-            className="rounded bg-well object-contain"
-            style={{ width: thumbWidth, height: SLOT_THUMB_HEIGHT, imageRendering: "pixelated" }}
-          />
-          <ImageZoomButton imageSrc={imageSrc} reveal={{ kind: "override", ref: url }} />
-        </div>
-      ) : (
-        <div
-          className="flex items-center justify-center rounded bg-well text-center text-xs text-faint-foreground"
-          style={{ width: thumbWidth, height: SLOT_THUMB_HEIGHT }}
-        >
-          {t("assetPanel.dropPlaceholder")}
-        </div>
-      )}
-      <div className="text-xs text-muted-foreground">{title}</div>
-      {dims && (
-        <div className="text-xs tabular-nums text-faint-foreground">
-          {dims.width}×{dims.height} px
-        </div>
-      )}
-      {onRecrop && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onRecrop();
-          }}
-          className="rounded border border-border-strong px-2 py-0.5 text-xs text-muted-foreground hover:bg-surface-raised hover:text-foreground"
-        >
-          {t("assetPanel.recropButton")}
-        </button>
-      )}
-    </div>
   );
 }

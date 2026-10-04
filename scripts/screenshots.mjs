@@ -23,9 +23,7 @@ try {
     await app.evaluate(`${NAV}[${i}].click()`);
     await sleep(2500);
     if (/roster/i.test(label)) {
-      await app.evaluate(`document.querySelector("main button[role=combobox]")?.click()`);
-      await sleep(800);
-      await app.evaluate(`[...document.querySelectorAll("[role=option]")].find((o) => o.textContent.includes(${JSON.stringify(roster)}))?.click()`);
+      await app.evaluate(`[...document.querySelectorAll("[data-testid=roster-list] [cmdk-item]")].find((o) => o.textContent.trim().startsWith(${JSON.stringify(roster)}))?.click()`);
       await sleep(4000);
     }
     const file = path.join(OUT, `${i}-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`);

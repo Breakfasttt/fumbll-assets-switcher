@@ -1,7 +1,7 @@
 // E2E (bac à sable, cartes #16/#19) : navigation clavier, aide des raccourcis, badges, status bar, Ctrl+Z.
 import { fileURLToPath } from "node:url";
 import { launchApp, sleep } from "../lib/app-driver.mjs";
-import { buildPackZip, dropPngOnZone, openRoster } from "./helpers.mjs";
+import { buildPackZip, clickInPair, dropPngOnZone, openRoster } from "./helpers.mjs";
 
 const assert = (c, m) => {
   if (!c) throw new Error("ÉCHEC : " + m);
@@ -34,7 +34,7 @@ try {
   const badge = await app.evaluate(`[...document.querySelectorAll("aside nav button")].find((b) => b.textContent.includes("Rosters")).textContent`);
   assert(/1$/.test(badge.trim()), "badge Rosters = 1");
 
-  await app.evaluate(`[...document.querySelectorAll("main button")].find((b) => b.textContent.trim() === "✕").click()`);
+  assert(await clickInPair(app, "slot-delete", 1), "Supprimer l'iconset");
   await sleep(2000);
   assert(/0 image/.test(await statusBar(app)), "suppression → 0 image");
   await app.press("z", { ctrl: true });

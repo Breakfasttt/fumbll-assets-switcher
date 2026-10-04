@@ -22,20 +22,21 @@ const RENDER_FLAGS = [
 export { sleep };
 
 /** Creates a throw-away userData (config pointing to an empty fake FFB cache). */
-export function createSandbox({ language = "fr" } = {}) {
+export function createSandbox({ language = "fr", configured = true } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "fas-sandbox-"));
   const userData = path.join(dir, "userData");
   const cacheFolder = path.join(dir, "cache");
   fs.mkdirSync(userData, { recursive: true });
   fs.mkdirSync(cacheFolder, { recursive: true });
   fs.writeFileSync(path.join(cacheFolder, "map.json"), "{}");
-  fs.writeFileSync(path.join(userData, "config.json"), JSON.stringify({ cacheFolder, coachName: null, language }));
+  fs.writeFileSync(path.join(userData, "config.json"), JSON.stringify({ cacheFolder: configured ? cacheFolder : null, coachName: null, language }));
   return { dir, userData, cacheFolder, cleanup: () => fs.rmSync(dir, { recursive: true, force: true }) };
 }
 
-export async function launchApp({ sandbox = false, port = 9333, width = 1280, height = 860, language } = {}) {
+export async function launchApp({ sandbox = false, port = 9333, width = 1280, height = 860, language, configured } = {}) {
   if (!fs.existsSync(path.join(ROOT, "dist/renderer/index.html"))) throw new Error("build absent : lancer `npm run build` d'abord");
-  const box = sandbox ? createSandbox({ language }) : null;
+  // sandbox: true = new throw-away data, or a previous app.sandbox object to relaunch on the same data.
+  const box = sandbox === true ? createSandbox({ language, configured }) : sandbox || null;
   // Launched from VS Code / Claude Code, ELECTRON_RUN_AS_NODE=1 is inherited: drop it.
   const env = { ...process.env };
   delete env.ELECTRON_RUN_AS_NODE;
@@ -112,6 +113,11 @@ export async function launchApp({ sandbox = false, port = 9333, width = 1280, he
       await send("Input.dispatchKeyEvent", { type: "keyUp", key, code, modifiers });
       await sleep(400);
     },
+    /** Types text into the focused element. */
+    async type(text) {
+      await send("Input.insertText", { text });
+      await sleep(400);
+    },
     async text(selector = "body") {
       return evaluate(`document.querySelector(${JSON.stringify(selector)})?.innerText ?? ""`);
     },
@@ -128,11 +134,12 @@ export async function launchApp({ sandbox = false, port = 9333, width = 1280, he
       fs.mkdirSync(path.dirname(file), { recursive: true });
       fs.writeFileSync(file, Buffer.from(shot.result.data, "base64"));
     },
-    async close() {
+    /** keepSandbox: leave the data on disk to relaunch with launchApp({ sandbox: app.sandbox }). */
+    async close({ keepSandbox = false } = {}) {
       ws.close();
       proc.kill();
-      await sleep(500);
-      box?.cleanup();
+      await sleep(800);
+      if (!keepSandbox) box?.cleanup();
     },
   };
 }

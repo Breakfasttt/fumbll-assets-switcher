@@ -13,7 +13,7 @@ description: Zone transverse renderer de fumbbl-assets-switcher — shell de l'a
 | `src/renderer/main.tsx` | `createRoot` + import `index.css` |
 | `src/renderer/index.css` | `@import "tailwindcss"` + tokens, couche base : bordure par défaut `--border`, `body` 13 px police système, scrollbars fines, focus-visible global (`--ring`), curseur pointer des boutons, `prefers-reduced-motion`. **Aucune couleur littérale** |
 | `src/renderer/global.d.ts` | `window.fumbblApi: FumbblApi` (import type depuis `src/main/preload.ts`, exception déclarée) |
-| `src/renderer/app/App.tsx` | providers (`QueryClientProvider` tout en haut, `LanguageProvider`, `TooltipProvider`, `ConfirmDialogProvider`, `Toaster`) + `AppShell` : grille sidebar 200 px / contenu / status bar ; Config forcée si pas de cache ; raccourcis globaux (`Ctrl+1…5` onglets, `Ctrl+Z` = `runLastUndo`, `?` = aide) |
+| `src/renderer/app/App.tsx` | providers (`QueryClientProvider` tout en haut, `LanguageProvider`, `TooltipProvider`, `ConfirmDialogProvider`, `Toaster`) + `AppShell` : grille sidebar 200 px / contenu / status bar ; rien n'est rendu avant config + vérif du cache (pas de flash) ; Config (onboarding) tant que le cache est absent **ou invalide** (`useCacheValid`), onglets verrouillés ; sinon rouvre `ui.lastTab` ; raccourcis globaux (`Ctrl+1…5` onglets, `Ctrl+Z` = `runLastUndo`, `?` = aide) |
 | `src/renderer/app/Sidebar.tsx` | `Sidebar`, `Tab`, `TAB_ORDER` : `<nav>` de vrais `<button aria-current>`, icônes lucide, badges (customs actifs rosters / terrains en `live`, éléments nettoyables en `warning`), onglets désactivés + tooltip tant que pas de cache, `ActivePackCard` en bas |
 | `src/renderer/app/ActivePackCard.tsx` | carte « Pack actif » visible partout (nom, nb d'images, « Détacher » = `clearActivePack` + toast) ; rien si aucun pack actif |
 | `src/renderer/app/StatusBar.tsx` | barre du bas : santé du cache (`useCacheValid`, point live/danger), chemin tronqué au milieu (tooltip complet), coach, nb d'images custom en jeu, « Ouvrir le dossier », « Raccourcis » |
@@ -43,6 +43,7 @@ description: Zone transverse renderer de fumbbl-assets-switcher — shell de l'a
 | `src/renderer/shared/ui/badge.tsx` | `Badge` cva : default / primary / live (en jeu) / warning / danger / outline ; compteurs en `tabular-nums` |
 | `src/renderer/shared/ui/skeleton.tsx` | `Skeleton` : placeholder de chargement aux dimensions exactes du contenu |
 | `src/renderer/shared/ui/kbd.tsx` | `Kbd` : affichage d'un raccourci clavier |
+| `src/renderer/shared/ui/command.tsx` | primitives **cmdk** habillées (`Command`, `CommandInput`, `CommandList`, `CommandEmpty`, `CommandGroup`, `CommandItem`, `CommandSeparator`) : palette et futures listes filtrables (rosters #21, terrains #27) |
 | `src/renderer/shared/ui/toaster.tsx` | `Toaster` sonner habillé aux tokens (monté une fois dans `app/App.tsx`, en bas à droite) |
 | `src/renderer/shared/ui/empty-state.tsx` | `EmptyState` (icon, title, description, action) : état vide d'une liste/panneau, textes passés déjà traduits |
 
@@ -54,17 +55,20 @@ Manquants volontairement (docs/ux-research.md §5.4) : Tabs, ScrollArea, Context
 ### Composants partagés — `shared/components`
 | Fichier | Rôle |
 |---|---|
+| `src/renderer/shared/components/CommandPalette.tsx` | palette **Ctrl+K** (`NavigationTarget {tab, rosterId?, positionName?}`) : groupes Récents (5, `ui.recentCommands`), Aller à, Rosters, Positions (rosters déjà en cache via l'index « utilisé par », aucune requête propre), Langue, Actions. L'app applique la cible (`App.navigate` : sauvegarde `ui` puis remonte la vue via `key`) |
 | `src/renderer/shared/components/ShortcutsDialog.tsx` | aide des raccourcis (touche `?` ou bouton de la status bar) : **à tenir à jour** à chaque nouveau `useHotkey` |
 | `src/renderer/shared/components/ConfirmDialogProvider.tsx` | `ConfirmDialogProvider` + `useConfirm()` → `confirm(message | {title, description, confirmLabel, destructive}): Promise<boolean>` sur **AlertDialog**. Réservé aux actions irréversibles ; le réversible passe par `notify.undoable` |
-| `src/renderer/shared/components/ImageZoomModal.tsx` | `ImageZoomButton` (loupe en bas à droite d'une vignette) → Dialog pan/zoom (molette + range 0,5–8), Reset, « Afficher dans le dossier » (`RevealTarget` override/cacheFile). Racine `<span>` qui stoppe clic/keydown : les événements React traversent le portal et remonteraient au slot parent |
+| `src/renderer/shared/components/ImageZoomModal.tsx` | `ImageZoomButton` (loupe en bas à droite d'une vignette) → Dialog pan/zoom (molette + range 0,5–8), Reset, « Afficher dans le dossier » (`RevealTarget` override/cacheFile). Racine `<span>` qui stoppe clic/keydown (héritage des slots cliquables, devenu inoffensif depuis #22) |
+| `src/renderer/shared/components/AssetSlotPair.tsx` | `AssetSlotPair({slot, aspectRatio, thumbHeight, defaultCaption?, onFile?, onRecrop?, sharedBy?, owner?})` : paire Défaut/Custom d'un asset (portrait, iconset, terrain). Image en jeu choisie par `ToggleGroup` (`aria-label`, Custom désactivé + tooltip sans override) ; vignettes **non cliquables** sur `bg-well`, liseré `border-live` + Badge « En jeu », `pixelated` seulement si agrandie, `Skeleton` au ratio, dimensions `tabular-nums`, loupe sur chaque vignette ; vignette custom = dropzone (drag-over pointillé primary + « Déposer pour remplacer ») + input file caché ; actions `IconButton` Remplacer / Recadrer (si `onRecrop`) / Supprimer sous la vignette custom, menu ⋯ (afficher dans le dossier, copier l'URL) à droite du ToggleGroup ; vignette custom vide = texte + bouton « Choisir un fichier… » dans la dropzone (icône masquée sous 120 px de haut) ; « Partagé par » tronqué + tooltip, avertissement `warning` si > 1 roster (`owner` exclu de la liste). `onFile` absent = `slot.saveFile`. Repères e2e : `data-testid="asset-slot-pair"`, `data-slot="default\|custom"`, `data-in-game`, `slot-toggle-*`, `slot-replace/recrop/delete/menu/choose-file`, `in-game-badge`, `slot-file-input`, `shared-by`, `shared-warning` |
 | `src/renderer/shared/components/CropEditor.tsx` | `CropEditor` + `CropTarget` : viewport 360 px au ratio cible, pan pointer, zoom molette/range, sauvegarde PNG `targetWidth×targetHeight` en override (garde pack actif). Utilisé par rosters (panneau) et pitches (dialog) |
 
 ### Hooks — `shared/hooks`
 | Fichier | Rôle |
 |---|---|
 | `src/renderer/shared/hooks/useActivePackGuard.ts` | `guardAgainstActivePack()` : si un pack est actif (lu dans le cache `packs` via `fetchQuery(packsQuery)`, pas d'IPC par mutation), `confirm` avant mutation ; l'appelant fait ensuite `useClearActivePack()` |
-| `src/renderer/shared/hooks/useCacheFolder.ts` | `cacheFolder` dérivé de `useConfig()` (`loaded` jamais utilisé → flash de l'écran Config) ; changer de dossier = `useSaveConfig` |
+| `src/renderer/shared/hooks/useUiMemory.ts` | `useUiMemory()` → `{ui, remember(patch)}` : mémoire de navigation persistée dans `config.json` (`AppConfig.ui` : `lastTab`, `lastRosterId`, `showSpecialRosters`, `lastPositionName`, `lastPitchKey`) ; lire pour l'état initial, `remember` à chaque changement |
 | `src/renderer/shared/hooks/useOverrideUndo.ts` | `notifyOverrideUndo(msg, {cacheFolder, url, versionId})` : toast `notify.undoable` dont « Annuler » appelle `useRestoreOverride` (puis toast `common.restoredToast` / `common.undoFailedToast`) ; rien si `versionId` absent (rien n'a été remplacé) |
+| `src/renderer/shared/hooks/useAssetSlot.ts` | `useAssetSlot(cacheFolder, url \| null)` → `AssetSlotState` : `defaultImage/defaultError/defaultLoading`, `override`, `customImage/customLoading`, `customActive`, `activeImage` (celle que charge le jeu), `setActive(bool)`, `saveFile(file)` (save direct + toast « remplacé » avec Annuler), `remove()` (toast Annuler, pas de confirmation) ; chaque mutation passe par `guardAgainstActivePack` puis `useClearActivePack`. Source unique pour `AssetSlotPair`, `AssetPanel`, `PitchWeatherSlot` |
 | `src/renderer/shared/hooks/useHotkey.ts` | `useHotkey(combo \| combo[], handler, {enabled, allowInInput, preventDefault})` : raccourci global (`"ctrl+k"`, `"escape"`, `"?"`), ignoré pendant la saisie sauf `allowInInput`. Maison volontairement (pas de lib) |
 | `src/renderer/shared/hooks/useImageDimensions.ts` | dimensions naturelles d'une image (data URL) |
 
@@ -115,8 +119,7 @@ Ajouter une clé : dans les **4** dictionnaires (règle `i18n-parity`), clé `zo
 
 ## Pièges connus
 
-- Onglet initial toujours « config » ; dernier onglet non mémorisé (#17).
-- Slots d'asset encore en `div role=button` (#22). Navigation : vrais boutons depuis #16.
+- Plus de `div role=button` : slots d'asset = `AssetSlotPair` + ToggleGroup (#22), navigation = vrais boutons (#16).
 - Pan/zoom pointer dupliqué entre `CropEditor` et `ImageZoomModal` ; `loadImage`/`canvasToPngBase64` dupliqués avec `features/iconset`.
 - `index.html` en `lang="fr"` fixe.
 
