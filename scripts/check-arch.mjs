@@ -263,6 +263,14 @@ for (const file of SOURCES.filter((f) => processOf(f) === "renderer" && f.endsWi
     report("unknown-color-token", "error", file, lineOf(text, m.index), `"${m[0].trim().replace(/^["'`:]/, "")}" : token de couleur "${name}" inconnu (${TOKENS_FILE})`);
   }
 }
+// tailwind-merge doit connaître exactement les tokens (sinon cn() fusionne mal sans erreur).
+const UTILS_FILE = "src/renderer/shared/lib/utils.ts";
+if (exists(UTILS_FILE)) {
+  const block = read(UTILS_FILE).match(/COLOR_TOKENS = \[([\s\S]*?)\]/)?.[1] ?? "";
+  const merged = new Set([...block.matchAll(/"([a-z0-9-]+)"/g)].map((m) => m[1]));
+  for (const t of colorTokens) if (!merged.has(t)) report("twmerge-tokens", "error", UTILS_FILE, 1, `token "${t}" absent de COLOR_TOKENS (tailwind-merge)`);
+  for (const t of merged) if (!colorTokens.has(t)) report("twmerge-tokens", "error", UTILS_FILE, 1, `"${t}" dans COLOR_TOKENS mais absent de ${TOKENS_FILE}`);
+}
 // CSS : aucune couleur littérale hors du fichier de tokens.
 for (const file of walk("src/renderer", (f) => f.endsWith(".css") && f !== TOKENS_FILE)) {
   const text = stripComments(read(file));

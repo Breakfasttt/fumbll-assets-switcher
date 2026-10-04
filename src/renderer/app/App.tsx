@@ -3,6 +3,7 @@ import { cn } from "@/shared/lib/utils";
 import { useCacheFolder } from "@/shared/hooks/useCacheFolder";
 import { LanguageProvider, useTranslation } from "@/shared/i18n/LanguageContext";
 import { ConfirmDialogProvider } from "@/shared/components/ConfirmDialogProvider";
+import { TooltipProvider } from "@/shared/ui/tooltip";
 import { ConfigView } from "@/features/config";
 import { RosterView } from "@/features/rosters";
 import { PitchView } from "@/features/pitches";
@@ -14,9 +15,11 @@ type Tab = "config" | "rosters" | "pitches" | "packs" | "orphans";
 export function App() {
   return (
     <LanguageProvider>
-      <ConfirmDialogProvider>
-        <AppShell />
-      </ConfirmDialogProvider>
+      <TooltipProvider>
+        <ConfirmDialogProvider>
+          <AppShell />
+        </ConfirmDialogProvider>
+      </TooltipProvider>
     </LanguageProvider>
   );
 }

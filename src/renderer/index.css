@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 @import "./shared/styles/tokens.css";
 
 @layer base {
