@@ -17,16 +17,15 @@ Un `AssetPanel` = un asset (URL FUMBBL) avec deux slots : **Défaut** (image FUM
 | `src/renderer/features/asset-editor/imagePrompt.ts` | `buildPortraitPrompt(ctx, w, h)`, `buildIconsetPrompt(ctx, cellSize, rows)` |
 | `src/renderer/features/asset-editor/index.ts` | API publique : `AssetPanel` |
 
-Dépendances : `@/features/iconset` (`AtlasBreakdown` affiché sous les slots si `showAtlasBreakdown`), `shared/components/ImageZoomModal`, `shared/hooks/useActivePackGuard`, `useImageDimensions`, `shared/lib/rosters` (`extractAssetId`, usage index).
+Dépendances : `@/features/iconset` (`AtlasBreakdown` affiché sous les slots si `showAtlasBreakdown`), `shared/components/ImageZoomModal`, `shared/hooks/useActivePackGuard`, `useOverrideUndo`, `useImageDimensions`, `shared/api` (queries/mutations), `shared/lib/rosters` (`extractAssetId`).
 
 ## Comportement
 
-- Défaut : `fumbblApi.fetchAssetImage(cacheFolder, url)` (cache FFB d'abord, sinon CDN puis écriture dans le cache — voir **main-ipc**).
-- Override : `getOverride(url)` + `readOverrideImage(url)` → `refreshOverride`.
-- Cliquer un slot = l'activer (`setOverrideActive`). Toute mutation : `guardAgainstActivePack()` puis `clearActivePack()`.
-- Drop : portrait → `onOpenCrop` (le crop sauve lui-même) ; iconset → `saveOverride` direct.
-- « Utilisé par » : attend `getRosterUsageIndexReady()` puis `getRostersUsingAsset(url)`.
-- Props de rappel (`onOpenEditor`, `onOpenCrop`, `onRecropExisting`) : l'ouverture des éditeurs est déléguée au conteneur (`rosters/PlayerDetail`).
+- Données via `shared/api` : `useDefaultAsset(cacheFolder, url)` (cache FFB d'abord, sinon CDN — voir **main-ipc**), `useOverride(url)` (entrée + image), `useRosterUsageIndex()` (« Utilisé par »). Plus de `refreshOverride` : les mutations invalident `override(url)`, donc tout slot monté sur la même URL (autre onglet, crop, éditeur pixel) se met à jour seul.
+- Cliquer un slot = l'activer (`useSetOverrideActive`). Toute mutation : `guardAgainstActivePack()` puis `useClearActivePack()`.
+- Drop : portrait → `onOpenCrop` (le crop sauve lui-même) ; iconset → `useSaveOverride` direct, toast « Override remplacé » + Annuler si une version existait (`undoVersionId`).
+- ✕ : `useDeleteOverride` puis toast « Override supprimé » + Annuler (`useOverrideUndo` → `useRestoreOverride`).
+- Props de rappel (`onOpenEditor`, `onOpenCrop`, `onRecropExisting`, sans `onSaved`) : l'ouverture des éditeurs est déléguée au conteneur (`rosters/PlayerDetail`).
 
 ## Pièges connus
 

@@ -1,66 +1,31 @@
-import { useEffect, useMemo, useState } from "react";
-import { RosterInfo } from "@common/types";
+import { useMemo, useState } from "react";
 import { Card, CardTitle } from "@/shared/ui/card";
 import { Checkbox } from "@/shared/ui/checkbox";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/shared/ui/select";
-import { BB2025_ROSTER_IDS, fetchAllRosters, indexRosterUsage } from "@/shared/lib/rosters";
+import { BB2025_ROSTER_IDS } from "@/shared/lib/rosters";
+import { useRoster, useRosterList, useRosterUsageIndex } from "@/shared/api/queries";
 import { useTranslation } from "@/shared/i18n/LanguageContext";
 import { PlayerEditor } from "./PlayerEditor";
 
-interface RosterSummary {
-  id: number;
-  name: string;
-}
-
 export function RosterView({ cacheFolder }: { cacheFolder: string }) {
   const { t } = useTranslation();
-  const [allRosters, setAllRosters] = useState<RosterSummary[]>([]);
-  const [loadingList, setLoadingList] = useState(true);
   const [showSpecial, setShowSpecial] = useState(false);
   const [selectedRosterId, setSelectedRosterId] = useState<string>("");
-  const [roster, setRoster] = useState<RosterInfo | null>(null);
-  const [loadingRoster, setLoadingRoster] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const rosterList = useRosterList();
+  const rosterQuery = useRoster(Number(selectedRosterId) || null);
+  // Starts building the "used by" index in the background.
+  useRosterUsageIndex();
 
-  useEffect(() => {
-    fetchAllRosters()
-      .then((rosters) => {
-        setAllRosters(rosters);
-        indexRosterUsage(rosters.map((r) => r.id));
-      })
-      .finally(() => setLoadingList(false));
-  }, []);
+  const loadingList = rosterList.isPending;
+  const roster = rosterQuery.data ?? null;
+  const loadingRoster = rosterQuery.isLoading;
+  const error = rosterQuery.error?.message ?? null;
 
   const visibleRosters = useMemo(() => {
+    const allRosters = rosterList.data ?? [];
     const list = showSpecial ? allRosters : allRosters.filter((r) => BB2025_ROSTER_IDS.has(r.id));
     return [...list].sort((a, b) => a.name.localeCompare(b.name));
-  }, [allRosters, showSpecial]);
-
-  useEffect(() => {
-    const id = Number(selectedRosterId);
-    if (!id) {
-      setRoster(null);
-      return;
-    }
-    let cancelled = false;
-    setLoadingRoster(true);
-    setError(null);
-    setRoster(null);
-    window.fumbblApi
-      .fetchRoster(id)
-      .then((data) => {
-        if (!cancelled) setRoster(data);
-      })
-      .catch((e: any) => {
-        if (!cancelled) setError(e.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingRoster(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedRosterId]);
+  }, [rosterList.data, showSpecial]);
 
   return (
     <div className="flex flex-col gap-4">

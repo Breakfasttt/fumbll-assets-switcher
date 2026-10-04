@@ -1,15 +1,6 @@
-import { useEffect, useState } from "react";
+import { useConfig } from "@/shared/api/queries";
 
 export function useCacheFolder() {
-  const [cacheFolder, setCacheFolder] = useState<string | null>(null);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    window.fumbblApi.loadConfig().then((config) => {
-      setCacheFolder(config.cacheFolder);
-      setLoaded(true);
-    });
-  }, []);
-
-  return { cacheFolder, setCacheFolder, loaded };
+  const { data, isSuccess } = useConfig();
+  return { cacheFolder: data?.cacheFolder ?? null, loaded: isSuccess };
 }

@@ -1,5 +1,7 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, ReactNode } from "react";
 import { Language } from "@common/types";
+import { useConfig } from "@/shared/api/queries";
+import { useSaveConfig } from "@/shared/api/mutations";
 import { TRANSLATIONS } from "./translations";
 
 interface LanguageContextValue {
@@ -19,20 +21,10 @@ function interpolate(template: string, params?: Record<string, string | number>)
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>("en");
+  const language: Language = useConfig().data?.language ?? "en";
+  const saveConfig = useSaveConfig();
 
-  useEffect(() => {
-    window.fumbblApi.loadConfig().then((config) => {
-      if (config.language) setLanguageState(config.language);
-    });
-  }, []);
-
-  const setLanguage = (next: Language) => {
-    setLanguageState(next);
-    window.fumbblApi.loadConfig().then((config) => {
-      window.fumbblApi.saveConfig({ ...config, language: next });
-    });
-  };
+  const setLanguage = (next: Language) => saveConfig.mutate({ language: next });
 
   const t = (key: string, params?: Record<string, string | number>): string => {
     const template = TRANSLATIONS[language][key] ?? TRANSLATIONS.en[key] ?? key;

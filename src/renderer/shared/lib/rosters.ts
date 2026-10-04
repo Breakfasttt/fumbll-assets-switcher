@@ -1,3 +1,5 @@
+import type { RosterInfo } from "@common/types";
+
 // Ordered so that when a race name exists in multiple divisions with the same
 // underlying roster id, the first (most common) one wins during dedup.
 export const DIVISION_IDS = [1, 2, 3, 5, 10, 200];
@@ -62,37 +64,21 @@ export async function fetchAllRosters(): Promise<{ id: number; name: string }[]>
   return [...byName.values()];
 }
 
-// Maps an asset URL to every known roster name that uses it, built lazily in
-// the background so we can tell the user "this asset is also used by X, Y, Z".
-const rostersByAssetUrl = new Map<string, Set<string>>();
-let rosterUsageIndexReady: Promise<void> | null = null;
-
-export function indexRosterUsage(rosterIds: number[]): Promise<void> {
-  if (rosterUsageIndexReady) return rosterUsageIndexReady;
-  rosterUsageIndexReady = (async () => {
-    const rosters = await Promise.all(
-      rosterIds.map((id) => window.fumbblApi.fetchRoster(id).catch(() => null))
-    );
-    for (const roster of rosters) {
-      if (!roster) continue;
-      for (const position of roster.positions) {
-        for (const url of [position.urlPortrait, position.urlIconSet]) {
-          if (!url) continue;
-          if (!rostersByAssetUrl.has(url)) {
-            rostersByAssetUrl.set(url, new Set());
-          }
-          rostersByAssetUrl.get(url)!.add(roster.name);
-        }
+/**
+ * Maps an asset URL to the sorted names of every roster using it, so the UI can
+ * tell "this asset is also used by X, Y, Z". Rosters that failed to load are null.
+ */
+export function buildRosterUsageIndex(rosters: (RosterInfo | null)[]): Map<string, string[]> {
+  const byUrl = new Map<string, Set<string>>();
+  for (const roster of rosters) {
+    if (!roster) continue;
+    for (const position of roster.positions) {
+      for (const url of [position.urlPortrait, position.urlIconSet]) {
+        if (!url) continue;
+        if (!byUrl.has(url)) byUrl.set(url, new Set());
+        byUrl.get(url)!.add(roster.name);
       }
     }
-  })();
-  return rosterUsageIndexReady;
-}
-
-export function getRosterUsageIndexReady(): Promise<void> | null {
-  return rosterUsageIndexReady;
-}
-
-export function getRostersUsingAsset(url: string): Set<string> | undefined {
-  return rostersByAssetUrl.get(url);
+  }
+  return new Map([...byUrl].map(([url, names]) => [url, [...names].sort()]));
 }

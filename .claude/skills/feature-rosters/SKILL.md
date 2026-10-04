@@ -12,22 +12,22 @@ Feature **conteneur** : elle compose `asset-editor` et `iconset` (déclaré dans
 
 | Fichier | Rôle |
 |---|---|
-| `src/renderer/features/rosters/RosterView.tsx` | Select du roster + case « rosters spéciaux » (hors `BB2025_ROSTER_IDS`), ligne résumé ; lance `indexRosterUsage` en tâche de fond |
+| `src/renderer/features/rosters/RosterView.tsx` | Select du roster + case « rosters spéciaux » (hors `BB2025_ROSTER_IDS`), ligne résumé ; `useRosterList`, `useRoster(id)`, lance `useRosterUsageIndex` en tâche de fond |
 | `src/renderer/features/rosters/PlayerEditor.tsx` | grille liste des positions (gauche, 1ʳᵉ sélectionnée par défaut) + `PlayerDetail` |
 | `src/renderer/features/rosters/PlayerDetail.tsx` | 2 `AssetPanel` (portrait 95×147, iconset) + panneau latéral sticky : `PixelEditor` ou `CropEditor` (`SidePanel` state) |
 | `src/renderer/features/rosters/index.ts` | API publique : `RosterView` |
 
-Dépendances : `@/features/asset-editor` (`AssetPanel`), `@/features/iconset` (`PixelEditor`, `AtlasInfo`, `EditorTarget`), `shared/components/CropEditor`, `shared/lib/rosters` (`fetchAllRosters`, `BB2025_ROSTER_IDS`, `indexRosterUsage`).
+Dépendances : `@/features/asset-editor` (`AssetPanel`), `@/features/iconset` (`PixelEditor`, `AtlasInfo`, `EditorTarget`), `shared/components/CropEditor`, `shared/api/queries`, `shared/lib/rosters` (`BB2025_ROSTER_IDS`).
 
 ## Données
 
-- `shared/lib/rosters.ts` : `fetchAllRosters()` interroge les divisions `[1,2,3,5,10,200]` et dédoublonne par nom ; `BB2025_ROSTER_IDS` codé en dur (31 ids) ; index « utilisé par » module-level.
-- `fumbblApi.fetchRoster(id)` → `RosterInfo {id, name, baseIconPath, positions[{name,type,urlPortrait,urlIconSet}]}` (parsing XML dans `main/lib/fumbblApi.ts`).
-- Rien n'est persisté : refetch à chaque montage de l'onglet.
+- `useRosterList()` (`staleTime: Infinity`) → `fetchAllRosters()` interroge les divisions `[1,2,3,5,10,200]` et dédoublonne par nom ; `BB2025_ROSTER_IDS` codé en dur (31 ids).
+- `useRoster(id)` (`staleTime` 1 h) → `RosterInfo {id, name, baseIconPath, positions[{name,type,urlPortrait,urlIconSet}]}` (parsing XML dans `main/lib/fumbblApi.ts`).
+- `useRosterUsageIndex()` (∞) : index « utilisé par » construit depuis tous les rosters, qui remplissent au passage le cache `useRoster`.
+- Cache mémoire react-query pour la session (rien sur disque) : revenir sur l'onglet ne refait aucune requête ; le roster/position sélectionné n'est pas mémorisé.
 
 ## Pièges connus
 
-- `fetchAllRosters()` (6 requêtes) relancé à chaque montage de Rosters, Pitches et Orphelins.
 - Pas de recherche/filtre de roster ni de position ; pas de mémorisation du dernier roster/position.
 - Layout en grilles fixes imbriquées, peu adapté aux petites fenêtres.
 

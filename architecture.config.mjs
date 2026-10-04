@@ -31,11 +31,12 @@ export default {
     "global.d.ts": [],
     app: ["app", "features", "shared"],
     features: ["shared"],
-    "shared/components": ["shared/components", "shared/ui", "shared/hooks", "shared/lib", "shared/i18n"],
-    "shared/hooks": ["shared/hooks", "shared/components", "shared/lib", "shared/i18n"],
+    "shared/components": ["shared/components", "shared/ui", "shared/hooks", "shared/api", "shared/lib", "shared/i18n"],
+    "shared/hooks": ["shared/hooks", "shared/components", "shared/api", "shared/lib", "shared/i18n"],
     "shared/ui": ["shared/ui", "shared/lib"],
+    "shared/api": ["shared/api", "shared/lib"],
     "shared/lib": ["shared/lib"],
-    "shared/i18n": ["shared/i18n"],
+    "shared/i18n": ["shared/i18n", "shared/api"],
   },
 
   // Imports inter-process autorisés (sinon : main <-> renderer interdit, src/shared pur).
@@ -61,6 +62,7 @@ export default {
     clsx: { scope: "renderer", reason: "cn()" },
     "tailwind-merge": { scope: "renderer", reason: "cn()" },
     "lucide-react": { scope: "renderer", reason: "icônes" },
+    "@tanstack/react-query": { scope: "renderer", reason: "couche données : cache + invalidation des ressources IPC (shared/api), utilisée par toutes les features" },
     sonner: { scope: "renderer", reason: "toasts : succès/erreur/promesse/annuler (shared/lib/notify.ts), remplace alert()" },
     // --- Build / outillage
     vite: { scope: "build", reason: "bundler renderer" },
@@ -99,6 +101,6 @@ export default {
   // Violations connues tolérées, chacune rattachée à la carte qui doit la corriger.
   // `count` = nombre exact de violations tolérées : plus (nouveau code) ou moins (count à baisser) fait échouer.
   baseline: [
-    { rule: "ipc-unused", file: "src/main/preload.ts", card: 22, count: 4 },
+    { rule: "ipc-unused", file: "src/main/preload.ts", card: 22, count: 2 },
   ],
 };

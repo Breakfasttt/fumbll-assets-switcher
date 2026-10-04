@@ -16,13 +16,14 @@ URL d'asset (clé d'override) : `…/Pitches/<Slug>.zip?pitch=<weather>`.
 | `src/renderer/features/pitches/pitches.ts` | `PITCH_ROSTER_SLUGS`, `SPECIAL_PITCH_OPTIONS`, `SYSTEM_PITCH_OPTIONS`, `rosterPitchOptions`, `buildPitchZipUrl`, `buildPitchWeatherUrl` |
 | `src/renderer/features/pitches/index.ts` | API publique : `PitchView` |
 
-Dépendances partagées : `shared/components/CropEditor`, `ImageZoomModal`, `shared/hooks/useActivePackGuard`, `useImageDimensions`, `shared/lib/rosters` (`fetchAllRosters`, `BB2025_ROSTER_IDS`).
+Dépendances partagées : `shared/components/CropEditor`, `ImageZoomModal`, `shared/hooks/useActivePackGuard`, `useOverrideUndo`, `useImageDimensions`, `shared/api` (`useRosterList` en cache : plus de refetch à chaque visite, `useDefaultAsset`, `useOverride`, mutations), `shared/lib/rosters` (`BB2025_ROSTER_IDS`).
 
 ## Comportement
 
 - Météo `intro` exclue (le client ne la lit jamais via l'URL custom).
 - Défaut : `fetchAssetImage` → côté main `fetchPitchImage` télécharge le zip, lit `pitch.ini`, extrait l'image de la météo (cache de promesses par zip).
 - Drop → toujours crop (dialog) ; « Recadrer » sur l'override existant.
+- ✕ : `useDeleteOverride` + toast « Override supprimé » avec Annuler (`useOverrideUndo`).
 
 ## Pièges connus
 

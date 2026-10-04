@@ -44,7 +44,8 @@ src/renderer/        (alias : @/*)
   features/<nom>/    une feature = un dossier + index.ts (API publique) + un skill
   shared/ui/         primitives design system (purs : pas d'IPC, pas d'i18n)
   shared/components/ composants transverses (ConfirmDialog, ImageZoom, CropEditor)
-  shared/hooks/      hooks transverses (garde pack actif, config, dimensions image)
+  shared/hooks/      hooks transverses (garde pack actif, config, undo override, dimensions image)
+  shared/api/        couche données react-query : queryClient + queryKeys, queries, mutations (invalidation)
   shared/lib/        utilitaires + données rosters partagées
   shared/i18n/       LanguageContext + dictionnaires en/fr/es/de
 scripts/             check-arch.mjs, kanban.mjs, lib/kanban-cards.mjs
@@ -124,8 +125,11 @@ cocher la checklist, mettre à jour le skill feature si des fichiers/comportemen
 | `npm run check-arch` | règles d'architecture + kanban (`-- --rule=<id>` pour une seule règle) |
 | `npm run verify` | typecheck + check-arch (à lancer avant de passer une carte en à valider) |
 | `npm run build` | build main + renderer |
+| `npm run e2e [-- <filtre>]` | après `build` : scénarios `scripts/e2e/*.mjs` en **bac à sable** (userData + cache FFB jetables) ; à étendre pour chaque carte UI testable |
 | `npm run screenshots` | après `build` : lance l'app via CDP et capture chaque onglet dans `.screenshots/` (vérif visuelle des cartes UI ; `-- --roster=Dwarf`) |
 | `npm run check-identity` | vérifie le compte git perso (commit) + compte GitHub actif `gh` (push) |
+
+Pilote commun : `scripts/lib/app-driver.mjs` (`launchApp({sandbox})` → `click(texte)`, `evaluate`, `waitFor`, `screenshot`, `close`) ; le bac à sable passe par la variable `FAS_USER_DATA` lue dans `src/main/main.ts`. Ne jamais faire de test destructif hors bac à sable.
 
 Hooks : `git config core.hooksPath .githooks` (activé sur ce poste). `pre-commit` = identité perso + check-arch ; `pre-push` = identité perso + compte `gh` actif.
 

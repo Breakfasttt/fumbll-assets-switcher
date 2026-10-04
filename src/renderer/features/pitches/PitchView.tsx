@@ -1,12 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { WeatherCode } from "@common/types";
-import { OverrideEntry } from "@common/types";
 import { Card, CardTitle } from "@/shared/ui/card";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup, SelectLabel } from "@/shared/ui/select";
 import { cn } from "@/shared/lib/utils";
 import { useTranslation } from "@/shared/i18n/LanguageContext";
 import { useImageDimensions } from "@/shared/hooks/useImageDimensions";
 import { useActivePackGuard } from "@/shared/hooks/useActivePackGuard";
+import { useOverrideUndo } from "@/shared/hooks/useOverrideUndo";
+import { useDefaultAsset, useOverride, useRosterList } from "@/shared/api/queries";
+import { useClearActivePack, useDeleteOverride, useSetOverrideActive } from "@/shared/api/mutations";
 import { ImageZoomButton } from "@/shared/components/ImageZoomModal";
 import { CropEditor, type CropTarget } from "@/shared/components/CropEditor";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
@@ -16,7 +18,7 @@ import {
   rosterPitchOptions,
   buildPitchWeatherUrl,
 } from "./pitches";
-import { BB2025_ROSTER_IDS, fetchAllRosters } from "@/shared/lib/rosters";
+import { BB2025_ROSTER_IDS } from "@/shared/lib/rosters";
 
 // Pitch weather slots the FFB client actually reads from the zip's pitch.ini.
 // "intro" is excluded: the client never resolves it through the custom pitch
@@ -29,18 +31,14 @@ const PITCH_HEIGHT = 452;
 
 export function PitchView({ cacheFolder }: { cacheFolder: string }) {
   const { t } = useTranslation();
-  const [rosterNames, setRosterNames] = useState<string[]>([]);
+  const rosters = useRosterList().data;
   const [selectedKey, setSelectedKey] = useState<string>("");
   const [cropTarget, setCropTarget] = useState<CropTarget | null>(null);
 
-  useEffect(() => {
-    fetchAllRosters().then((rosters) => {
-      const bb2025Names = rosters.filter((r) => BB2025_ROSTER_IDS.has(r.id)).map((r) => r.name);
-      setRosterNames(bb2025Names);
-    });
-  }, []);
-
-  const rosterOptions = useMemo(() => rosterPitchOptions(rosterNames), [rosterNames]);
+  const rosterOptions = useMemo(
+    () => rosterPitchOptions((rosters ?? []).filter((r) => BB2025_ROSTER_IDS.has(r.id)).map((r) => r.name)),
+    [rosters]
+  );
   const allOptions = useMemo(
     () => [...rosterOptions, ...SPECIAL_PITCH_OPTIONS, ...SYSTEM_PITCH_OPTIONS],
     [rosterOptions]
@@ -92,8 +90,8 @@ export function PitchView({ cacheFolder }: { cacheFolder: string }) {
               weather={weather}
               url={buildPitchWeatherUrl(selected.slug, weather)}
               cacheFolder={cacheFolder}
-              onOpenCrop={(imageSrc, url, onSaved) =>
-                setCropTarget({ imageSrc, url, targetWidth: PITCH_WIDTH, targetHeight: PITCH_HEIGHT, onSaved })
+              onOpenCrop={(imageSrc, url) =>
+                setCropTarget({ imageSrc, url, targetWidth: PITCH_WIDTH, targetHeight: PITCH_HEIGHT })
               }
             />
           ))}
@@ -127,42 +125,26 @@ function PitchWeatherSlot({
   weather: WeatherCode;
   url: string;
   cacheFolder: string;
-  onOpenCrop: (imageSrc: string, url: string, onSaved: () => void) => void;
+  onOpenCrop: (imageSrc: string, url: string) => void;
 }) {
   const { t } = useTranslation();
   const guardAgainstActivePack = useActivePackGuard();
-  const [defaultDataUrl, setDefaultDataUrl] = useState<string | null>(null);
-  const [defaultError, setDefaultError] = useState<string | null>(null);
-  const [override, setOverride] = useState<OverrideEntry | null>(null);
-  const [overrideDataUrl, setOverrideDataUrl] = useState<string | null>(null);
+  const notifyOverrideUndo = useOverrideUndo();
+  const setOverrideActive = useSetOverrideActive();
+  const removeOverride = useDeleteOverride();
+  const clearActivePack = useClearActivePack();
+  const defaultAsset = useDefaultAsset(cacheFolder, url);
+  const overrideData = useOverride(url).data;
   const [dragOver, setDragOver] = useState(false);
 
-  const refreshOverride = async () => {
-    const entry = await window.fumbblApi.getOverride(url);
-    setOverride(entry);
-    if (entry) {
-      const dataUrl = await window.fumbblApi.readOverrideImage(url);
-      setOverrideDataUrl(dataUrl);
-    } else {
-      setOverrideDataUrl(null);
-    }
-  };
-
-  useEffect(() => {
-    setDefaultDataUrl(null);
-    setDefaultError(null);
-    window.fumbblApi
-      .fetchAssetImage(cacheFolder, url)
-      .then((dataUrl) => {
-        if (!dataUrl) {
-          setDefaultError(t("assetPanel.downloadError"));
-          return;
-        }
-        setDefaultDataUrl(dataUrl);
-      })
-      .catch((e) => setDefaultError(e.message));
-    refreshOverride();
-  }, [url, cacheFolder]);
+  const defaultDataUrl = defaultAsset.data ?? null;
+  const defaultError = defaultAsset.error
+    ? defaultAsset.error.message
+    : defaultAsset.data === null
+      ? t("assetPanel.downloadError")
+      : null;
+  const override = overrideData?.entry ?? null;
+  const overrideDataUrl = overrideData?.image ?? null;
 
   const defaultActive = !override || !override.active;
   const customActive = !!override?.active;
@@ -171,21 +153,20 @@ function PitchWeatherSlot({
 
   const setActive = async (active: boolean) => {
     if (!(await guardAgainstActivePack())) return;
-    await window.fumbblApi.setOverrideActive(cacheFolder, url, active);
-    await window.fumbblApi.clearActivePack();
-    await refreshOverride();
+    await setOverrideActive.mutateAsync({ cacheFolder, url, active });
+    await clearActivePack.mutateAsync();
   };
 
   const handleDrop = (file: File) => {
     // CropEditor guards + clears the active pack itself at actual save time.
-    onOpenCrop(URL.createObjectURL(file), url, refreshOverride);
+    onOpenCrop(URL.createObjectURL(file), url);
   };
 
   const deleteOverride = async () => {
     if (!(await guardAgainstActivePack())) return;
-    await window.fumbblApi.deleteOverride(cacheFolder, url);
-    await window.fumbblApi.clearActivePack();
-    await refreshOverride();
+    const versionId = await removeOverride.mutateAsync({ cacheFolder, url });
+    await clearActivePack.mutateAsync();
+    notifyOverrideUndo(t("assetPanel.deletedToast"), { cacheFolder, url, versionId });
   };
 
   return (
@@ -283,7 +264,7 @@ function PitchWeatherSlot({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onOpenCrop(overrideDataUrl, url, refreshOverride);
+                onOpenCrop(overrideDataUrl, url);
               }}
               className="rounded border border-border-strong px-2 py-0.5 text-xs text-muted-foreground hover:bg-surface-raised hover:text-foreground"
             >

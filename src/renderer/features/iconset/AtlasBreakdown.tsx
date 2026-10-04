@@ -5,6 +5,8 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { useTranslation } from "@/shared/i18n/LanguageContext";
 import { useActivePackGuard } from "@/shared/hooks/useActivePackGuard";
 import { useConfirm } from "@/shared/components/ConfirmDialogProvider";
+import { useOverride } from "@/shared/api/queries";
+import { useClearActivePack, useSaveOverride } from "@/shared/api/mutations";
 import type { AtlasInfo } from "./PixelEditor";
 
 export const ATLAS_COLUMN_LABELS = ["Home idle", "Home moving", "Away idle", "Away moving"];
@@ -46,7 +48,6 @@ export function AtlasBreakdown({
   imageSource,
   url,
   cacheFolder,
-  onSaved,
   onOpenEditor,
 }: {
   imgSrc: string;
@@ -54,12 +55,14 @@ export function AtlasBreakdown({
   imageSource: "default" | "custom";
   url: string;
   cacheFolder: string;
-  onSaved: () => void;
-  onOpenEditor?: (atlasInfo: AtlasInfo, url: string, row: number, col: number, onSaved: () => void) => void;
+  onOpenEditor?: (atlasInfo: AtlasInfo, url: string, row: number, col: number) => void;
 }) {
   const { t } = useTranslation();
   const guardAgainstActivePack = useActivePackGuard();
   const confirm = useConfirm();
+  const hasOverride = !!useOverride(url).data?.entry;
+  const saveOverride = useSaveOverride();
+  const clearActivePack = useClearActivePack();
   const [atlasInfo, setAtlasInfo] = useState<AtlasInfo | null>(null);
   const [cellThumbs, setCellThumbs] = useState<string[][]>([]);
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -96,10 +99,8 @@ export function AtlasBreakdown({
   if (!atlasInfo) return null;
 
   const applyUniformRow = async () => {
-    // Starting from the default image would silently replace an existing custom
-    // one. Read the override from the main process at click time: it is the
-    // source of truth, a parent's state may be stale.
-    if (imageSource === "default" && (await window.fumbblApi.getOverride(url))) {
+    // Starting from the default image would silently replace an existing custom one.
+    if (imageSource === "default" && hasOverride) {
       if (!(await confirm(t("atlas.overwriteCustomConfirm")))) return;
     }
     if (!(await guardAgainstActivePack())) return;
@@ -119,10 +120,9 @@ export function AtlasBreakdown({
     }
 
     const base64 = canvasToPngBase64(outCanvas);
-    await window.fumbblApi.saveOverride(cacheFolder, url, base64, "png");
-    await window.fumbblApi.clearActivePack();
+    await saveOverride.mutateAsync({ cacheFolder, url, base64, format: "png" });
+    await clearActivePack.mutateAsync();
     setPopoverOpen(false);
-    onSaved();
   };
 
   return (
@@ -179,7 +179,7 @@ export function AtlasBreakdown({
                 <img
                   src={thumb}
                   title={t("atlas.cellTitle", { label: ATLAS_COLUMN_LABELS[col], n: row + 1 })}
-                  onClick={() => onOpenEditor?.(atlasInfo, url, row, col, onSaved)}
+                  onClick={() => onOpenEditor?.(atlasInfo, url, row, col)}
                   className="h-12 w-12 cursor-pointer rounded border border-border bg-well hover:border-primary"
                   style={{ imageRendering: "pixelated" }}
                 />

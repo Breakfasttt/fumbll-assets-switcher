@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/shared/api/queryClient";
 import { cn } from "@/shared/lib/utils";
 import { useCacheFolder } from "@/shared/hooks/useCacheFolder";
 import { LanguageProvider, useTranslation } from "@/shared/i18n/LanguageContext";
@@ -15,20 +17,22 @@ type Tab = "config" | "rosters" | "pitches" | "packs" | "orphans";
 
 export function App() {
   return (
-    <LanguageProvider>
-      <TooltipProvider>
-        <ConfirmDialogProvider>
-          <AppShell />
-          <Toaster />
-        </ConfirmDialogProvider>
-      </TooltipProvider>
-    </LanguageProvider>
+    <QueryClientProvider client={queryClient}>
+      <LanguageProvider>
+        <TooltipProvider>
+          <ConfirmDialogProvider>
+            <AppShell />
+            <Toaster />
+          </ConfirmDialogProvider>
+        </TooltipProvider>
+      </LanguageProvider>
+    </QueryClientProvider>
   );
 }
 
 function AppShell() {
   const { t } = useTranslation();
-  const { cacheFolder, setCacheFolder } = useCacheFolder();
+  const { cacheFolder } = useCacheFolder();
   const [activeTab, setActiveTab] = useState<Tab>("config");
 
   const TABS: { id: Tab; label: string }[] = [
@@ -83,10 +87,7 @@ function AppShell() {
         {effectiveTab === "config" && (
           <ConfigView
             cacheFolder={cacheFolder}
-            onConfigured={(folder) => {
-              setCacheFolder(folder);
-              setActiveTab("rosters");
-            }}
+            onConfigured={() => setActiveTab("rosters")}
           />
         )}
         {effectiveTab === "rosters" && cacheFolder && <RosterView cacheFolder={cacheFolder} />}

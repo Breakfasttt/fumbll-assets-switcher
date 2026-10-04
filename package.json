@@ -13,7 +13,8 @@
     "kanban": "node scripts/kanban.mjs",
     "verify": "npm run typecheck && npm run check-arch",
     "check-identity": "node scripts/check-git-identity.mjs --push",
-    "screenshots": "node scripts/screenshots.mjs"
+    "screenshots": "node scripts/screenshots.mjs",
+    "e2e": "node scripts/e2e.mjs"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
@@ -31,6 +32,7 @@
     "wait-on": "^8.0.1"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.104.1",
     "adm-zip": "^0.6.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

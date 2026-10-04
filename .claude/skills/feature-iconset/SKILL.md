@@ -20,13 +20,13 @@ Utilisé par : `asset-editor` (AtlasBreakdown sous les slots) et `rosters` (Pixe
 
 ## Comportement
 
-- Sauvegarde = PNG de l'atlas complet → `fumbblApi.saveOverride(cacheFolder, url, base64, "png")` → `clearActivePack()` → `onSaved()` (refresh du panel).
+- Sauvegarde = PNG de l'atlas complet → `useSaveOverride` → `useClearActivePack` ; l'invalidation de `override(url)` rafraîchit le panel (plus de callback `onSaved`).
 - Garde pack actif avant chaque sauvegarde (`useActivePackGuard`).
 - PixelEditor travaille sur une copie (`workingCanvasRef`) ; seule la cellule courante est réécrite à la sauvegarde (changer de cellule sans sauver perd les modifs).
 
 ## Pièges connus
 
-- « Répéter une variante » part de l'image **active** : le popover affiche la source (`imageSource`) et une confirmation est demandée si la source est le défaut alors qu'un override custom existe (lu via `getOverride` au clic, pas depuis l'état du parent).
+- « Répéter une variante » part de l'image **active** : le popover affiche la source (`imageSource`) et une confirmation est demandée si la source est le défaut alors qu'un override custom existe (lu via `useOverride(url)`, cache partagé avec le panel et tenu à jour par les mutations).
 - Libellés de colonnes en anglais en dur (`ATLAS_COLUMN_LABELS`) — non traduits.
 - `loadImage` / `canvasToPngBase64` dupliqués dans `shared/components/CropEditor.tsx` → à mutualiser dans `shared/lib`.
 - Éditeur pixel minimal : pas d'undo/redo, pas de pipette, pas de couleur libre, pas de raccourcis, souris uniquement.

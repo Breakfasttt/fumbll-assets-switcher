@@ -3,6 +3,7 @@ import { Card, CardTitle } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import { useTranslation } from "@/shared/i18n/LanguageContext";
 import { useActivePackGuard } from "@/shared/hooks/useActivePackGuard";
+import { useClearActivePack, useSaveOverride } from "@/shared/api/mutations";
 
 export interface CropTarget {
   /** Object URL or data URL of the image to crop. */
@@ -10,7 +11,6 @@ export interface CropTarget {
   url: string;
   targetWidth: number;
   targetHeight: number;
-  onSaved: () => void;
 }
 
 function canvasToPngBase64(canvas: HTMLCanvasElement): string {
@@ -34,7 +34,9 @@ const VIEWPORT_HEIGHT = 360;
 export function CropEditor({ target, cacheFolder, onDone }: { target: CropTarget; cacheFolder: string; onDone: () => void }) {
   const { t } = useTranslation();
   const guardAgainstActivePack = useActivePackGuard();
-  const { imageSrc, url, targetWidth, targetHeight, onSaved } = target;
+  const saveOverride = useSaveOverride();
+  const clearActivePack = useClearActivePack();
+  const { imageSrc, url, targetWidth, targetHeight } = target;
   const aspect = targetWidth / targetHeight;
 
   const [sourceImg, setSourceImg] = useState<HTMLImageElement | null>(null);
@@ -103,9 +105,8 @@ export function CropEditor({ target, cacheFolder, onDone }: { target: CropTarget
     ctx.drawImage(sourceImg, x, y, drawW, drawH);
 
     const base64 = canvasToPngBase64(outCanvas);
-    await window.fumbblApi.saveOverride(cacheFolder, url, base64, "png");
-    await window.fumbblApi.clearActivePack();
-    onSaved();
+    await saveOverride.mutateAsync({ cacheFolder, url, base64, format: "png" });
+    await clearActivePack.mutateAsync();
     onDone();
   };
 

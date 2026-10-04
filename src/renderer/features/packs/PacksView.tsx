@@ -1,28 +1,25 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { PackSummary } from "@common/types";
 import { Card, CardTitle } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import { useTranslation } from "@/shared/i18n/LanguageContext";
 import { useConfirm } from "@/shared/components/ConfirmDialogProvider";
 import { notify } from "@/shared/lib/notify";
+import { usePacks } from "@/shared/api/queries";
+import { useActivatePack, useDeletePack, useExportPack, useImportPack } from "@/shared/api/mutations";
 
 export function PacksView({ cacheFolder }: { cacheFolder: string }) {
   const { t } = useTranslation();
   const confirm = useConfirm();
-  const [packs, setPacks] = useState<PackSummary[]>([]);
-  const [loading, setLoading] = useState(true);
+  const packsQuery = usePacks();
+  const exportPack = useExportPack();
+  const importPack = useImportPack();
+  const activatePack = useActivatePack();
+  const deletePack = useDeletePack();
   const [exportName, setExportName] = useState("");
 
-  const refresh = async () => {
-    setLoading(true);
-    setPacks(await window.fumbblApi.listPacks());
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cacheFolder]);
+  const packs = packsQuery.data ?? [];
+  const loading = packsQuery.isPending;
 
   const handleExport = async () => {
     const name = exportName.trim();
@@ -30,7 +27,7 @@ export function PacksView({ cacheFolder }: { cacheFolder: string }) {
     const destPath = await window.fumbblApi.selectSaveFile(`${name}.zip`);
     if (!destPath) return;
     try {
-      await notify.promise(window.fumbblApi.exportPack(name, undefined, destPath), {
+      await notify.promise(exportPack.mutateAsync({ name, destPath }), {
         loading: t("packs.exporting"),
         success: t("packs.exportSuccess", { name }),
         error: (e) => ((e as Error)?.message?.includes("No active") ? t("packs.exportEmpty") : t("packs.exportError")),
@@ -45,12 +42,11 @@ export function PacksView({ cacheFolder }: { cacheFolder: string }) {
     const zipPath = await window.fumbblApi.selectZipFile();
     if (!zipPath) return;
     try {
-      await notify.promise(window.fumbblApi.importPack(zipPath), {
+      await notify.promise(importPack.mutateAsync(zipPath), {
         loading: t("packs.importing"),
         success: (pack) => t("packs.importSuccess", { name: pack.name }),
         error: t("packs.importError"),
       });
-      await refresh();
     } catch {
       // already reported by the toast
     }
@@ -58,14 +54,12 @@ export function PacksView({ cacheFolder }: { cacheFolder: string }) {
 
   const handleActivate = async (pack: PackSummary) => {
     if (!(await confirm(t("packs.activateConfirm")))) return;
-    await window.fumbblApi.activatePack(cacheFolder, pack.id);
-    await refresh();
+    await activatePack.mutateAsync({ cacheFolder, packId: pack.id });
   };
 
   const handleDelete = async (pack: PackSummary) => {
     if (!(await confirm(t("packs.deleteConfirm")))) return;
-    await window.fumbblApi.deletePack(cacheFolder, pack.id);
-    await refresh();
+    await deletePack.mutateAsync({ cacheFolder, packId: pack.id });
   };
 
   return (

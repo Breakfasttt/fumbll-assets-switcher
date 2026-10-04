@@ -5,15 +5,17 @@ import { useTranslation } from "@/shared/i18n/LanguageContext";
 import { LANGUAGES } from "@common/types";
 import { LANGUAGE_NAMES } from "@/shared/i18n/translations";
 import { notify } from "@/shared/lib/notify";
+import { useSaveConfig } from "@/shared/api/mutations";
 
 export function ConfigView({
   cacheFolder,
   onConfigured,
 }: {
   cacheFolder: string | null;
-  onConfigured: (folder: string) => void;
+  onConfigured: () => void;
 }) {
   const { t, language, setLanguage } = useTranslation();
+  const saveConfig = useSaveConfig();
 
   const detect = async () => {
     const coaches = await window.fumbblApi.detectCoaches();
@@ -30,10 +32,9 @@ export function ConfigView({
       );
     }
     if (!chosen?.cachePath) return;
-    const current = await window.fumbblApi.loadConfig();
-    await window.fumbblApi.saveConfig({ ...current, cacheFolder: chosen.cachePath, coachName: chosen.coachName });
+    await saveConfig.mutateAsync({ cacheFolder: chosen.cachePath, coachName: chosen.coachName });
     notify.success(t("config.notify.cacheConfigured", { folder: chosen.cachePath }));
-    onConfigured(chosen.cachePath);
+    onConfigured();
   };
 
   const selectManually = async () => {
@@ -44,10 +45,9 @@ export function ConfigView({
       notify.error(t("config.notify.invalidFolder"));
       return;
     }
-    const current = await window.fumbblApi.loadConfig();
-    await window.fumbblApi.saveConfig({ ...current, cacheFolder: folder, coachName: null });
+    await saveConfig.mutateAsync({ cacheFolder: folder, coachName: null });
     notify.success(t("config.notify.cacheConfigured", { folder }));
-    onConfigured(folder);
+    onConfigured();
   };
 
   return (

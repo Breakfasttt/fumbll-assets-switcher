@@ -30,6 +30,10 @@ import { listPacks, exportPack, importPack, activatePack, deletePack, clearActiv
 // Dev mode only when launched by `npm run dev` (Vite server); `npm start` serves the built renderer.
 const isDev = process.argv.includes("--dev");
 
+// Sandbox for automated UI checks (scripts/lib/app-driver.mjs): all app data
+// (config, overrides, packs) goes to a throw-away folder instead of the real one.
+if (process.env.FAS_USER_DATA) app.setPath("userData", process.env.FAS_USER_DATA);
+
 function createWindow(): void {
   const win = new BrowserWindow({
     width: 1100,

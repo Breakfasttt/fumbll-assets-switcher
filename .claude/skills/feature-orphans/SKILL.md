@@ -11,10 +11,10 @@ Onglet « Orphelins » : deux listes de cartes avec vignette, loupe et bouton Su
 
 | Fichier | Rôle |
 |---|---|
-| `src/renderer/features/orphans/OrphansView.tsx` | `OrphansView` (charge les 2 listes, construit l'index « utilisé par » si absent) ; `InactiveOverrideCard` (vignette, URL, roster(s)) ; `OrphanFileCard` (vignette, nom, taille via `formatSize`) |
+| `src/renderer/features/orphans/OrphansView.tsx` | `OrphansView` (`useInactiveOverrides` + `useOrphanFiles`, lance `useRosterUsageIndex`) ; `InactiveOverrideCard` (vignette, URL, roster(s)) ; `OrphanFileCard` (vignette, nom, taille via `formatSize`) |
 | `src/renderer/features/orphans/index.ts` | API publique : `OrphansView` |
 
-IPC : `listInactiveOverrides`, `listOrphanCacheFiles`, `readOverrideImage`, `readOrphanCacheFile`, `deleteOverride`, `deleteOrphanCacheFile` (main : `overrides.listInactiveOverrides`, `cacheWriter.listOrphanCacheFiles`).
+Données (`shared/api`) : `useInactiveOverrides`, `useOrphanFiles(cacheFolder)` (`staleTime: 0` : re-liste à chaque visite, le jeu écrit dans son cache), `useOverride(url).image`, `useOrphanImage` ; mutations `useDeleteOverride`, `useDeleteOrphanFile` (invalident les listes : plus de `refresh()`). Main : `overrides.listInactiveOverrides`, `cacheWriter.listOrphanCacheFiles`.
 
 ## Pièges connus
 

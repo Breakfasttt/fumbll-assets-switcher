@@ -5,6 +5,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { cn } from "@/shared/lib/utils";
 import { useTranslation } from "@/shared/i18n/LanguageContext";
 import { useActivePackGuard } from "@/shared/hooks/useActivePackGuard";
+import { useClearActivePack, useSaveOverride } from "@/shared/api/mutations";
 import { ATLAS_COLUMN_LABELS, canvasToPngBase64 } from "./AtlasBreakdown";
 
 export interface AtlasInfo {
@@ -18,7 +19,6 @@ export interface EditorTarget {
   url: string;
   row: number;
   col: number;
-  onSaved: () => void;
 }
 
 const PALETTE = [
@@ -39,7 +39,9 @@ export function PixelEditor({
 }) {
   const { t } = useTranslation();
   const guardAgainstActivePack = useActivePackGuard();
-  const { atlasInfo, url, onSaved } = target;
+  const saveOverride = useSaveOverride();
+  const clearActivePack = useClearActivePack();
+  const { atlasInfo, url } = target;
   const { canvas: sourceCanvas, cellSize, rows } = atlasInfo;
 
   const [row, setRow] = useState(String(target.row));
@@ -112,9 +114,8 @@ export function PixelEditor({
     workingCtx.clearRect(c * cellSize, r * cellSize, cellSize, cellSize);
     workingCtx.drawImage(editCanvas, 0, 0, cellSize * ZOOM, cellSize * ZOOM, c * cellSize, r * cellSize, cellSize, cellSize);
     const base64 = canvasToPngBase64(working);
-    await window.fumbblApi.saveOverride(cacheFolder, url, base64, "png");
-    await window.fumbblApi.clearActivePack();
-    onSaved();
+    await saveOverride.mutateAsync({ cacheFolder, url, base64, format: "png" });
+    await clearActivePack.mutateAsync();
     onDone();
   };
 

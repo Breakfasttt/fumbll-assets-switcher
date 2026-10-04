@@ -28,11 +28,11 @@ export function PlayerDetail({
 
   const promptContext = { rosterName, positionName: position.name, positionType: position.type };
 
-  const openEditor = (atlasInfo: AtlasInfo, url: string, row: number, col: number, onSaved: () => void) => {
-    setSidePanel({ kind: "pixel", target: { atlasInfo, url, row, col, onSaved } });
+  const openEditor = (atlasInfo: AtlasInfo, url: string, row: number, col: number) => {
+    setSidePanel({ kind: "pixel", target: { atlasInfo, url, row, col } });
   };
 
-  const openCrop = (file: File, url: string, onSaved: () => void) => {
+  const openCrop = (file: File, url: string) => {
     setSidePanel({
       kind: "crop",
       target: {
@@ -40,15 +40,14 @@ export function PlayerDetail({
         url,
         targetWidth: PORTRAIT_WIDTH,
         targetHeight: PORTRAIT_HEIGHT,
-        onSaved,
       },
     });
   };
 
-  const openCropFromExisting = (imageSrc: string, url: string, onSaved: () => void) => {
+  const openCropFromExisting = (imageSrc: string, url: string) => {
     setSidePanel({
       kind: "crop",
-      target: { imageSrc, url, targetWidth: PORTRAIT_WIDTH, targetHeight: PORTRAIT_HEIGHT, onSaved },
+      target: { imageSrc, url, targetWidth: PORTRAIT_WIDTH, targetHeight: PORTRAIT_HEIGHT },
     });
   };
 

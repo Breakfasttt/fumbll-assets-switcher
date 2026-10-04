@@ -18,18 +18,18 @@ Dépendances partagées : `shared/i18n/LanguageContext` (`language`, `setLanguag
 
 ## Comportement actuel
 
-- `detect()` : `fumbblApi.detectCoaches()` → garde les coachs avec `cachePath` → prend **le premier** ; toast d'erreur si aucun, toast d'avertissement listant les coachs si plusieurs ; toast de succès une fois configuré. Sauve `{cacheFolder, coachName}`.
-- `selectManually()` : `selectFolder()` → `validateCacheFolder()` (présence de `map.json` / dossier valide) → sauve `{cacheFolder, coachName: null}`.
-- `onConfigured(folder)` → App met à jour le state et bascule sur l'onglet Rosters.
-- La langue est sauvée par `LanguageContext.setLanguage` (load + save complet de `config.json`).
+- `detect()` : `fumbblApi.detectCoaches()` → garde les coachs avec `cachePath` → prend **le premier** ; toast d'erreur si aucun, toast d'avertissement listant les coachs si plusieurs ; toast de succès une fois configuré. Sauve `{cacheFolder, coachName}` via `useSaveConfig`.
+- `selectManually()` : `selectFolder()` → `validateCacheFolder()` (présence de `map.json` / dossier valide) → sauve `{cacheFolder, coachName: null}` via `useSaveConfig`.
+- `useSaveConfig` met à jour le cache `config` : App relit `cacheFolder` via `useCacheFolder` ; `onConfigured()` bascule sur l'onglet Rosters.
+- La langue est lue via `useConfig` et sauvée par `LanguageContext.setLanguage` → `useSaveConfig({language})`.
 
 ## IPC utilisés
 
-`detectCoaches`, `selectFolder`, `validateCacheFolder`, `loadConfig`, `saveConfig` (voir **main-ipc** : `registry.ts`, `cacheWriter.validateCacheFolder`, `config.ts`).
+`detectCoaches`, `selectFolder`, `validateCacheFolder` (appels directs) ; `loadConfig`/`saveConfig` via `shared/api` (`useConfig`, `useSaveConfig`) (voir **main-ipc** : `registry.ts`, `cacheWriter.validateCacheFolder`, `config.ts`).
 
 ## Pièges connus
 
-- Config relue/réécrite entièrement côté renderer à 3 endroits (ici ×2, LanguageContext) : risque d'écrasement concurrent. `coachName` n'est relu nulle part.
+- `useSaveConfig(patch)` fusionne avec la config en cache puis réécrit tout `config.json`. `coachName` n'est relu nulle part.
 - Plusieurs coachs détectés : le premier gagne sans choix utilisateur.
 - Auto-détection Windows uniquement.
 

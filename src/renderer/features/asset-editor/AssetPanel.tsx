@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card, CardTitle } from "@/shared/ui/card";
 import { cn } from "@/shared/lib/utils";
-import { extractAssetId, getRostersUsingAsset, getRosterUsageIndexReady } from "@/shared/lib/rosters";
+import { extractAssetId } from "@/shared/lib/rosters";
 import { useImageDimensions } from "@/shared/hooks/useImageDimensions";
 import { useActivePackGuard } from "@/shared/hooks/useActivePackGuard";
+import { useOverrideUndo } from "@/shared/hooks/useOverrideUndo";
+import { useDefaultAsset, useOverride, useRosterUsageIndex } from "@/shared/api/queries";
+import { useClearActivePack, useDeleteOverride, useSaveOverride, useSetOverrideActive } from "@/shared/api/mutations";
 import { useTranslation } from "@/shared/i18n/LanguageContext";
-import { OverrideEntry } from "@common/types";
 import { AtlasBreakdown } from "@/features/iconset";
 import { PromptPopover } from "./PromptPopover";
 import { ImageZoomButton } from "@/shared/components/ImageZoomModal";
@@ -34,9 +36,9 @@ interface Props {
   url: string | null;
   cacheFolder: string;
   showAtlasBreakdown?: boolean;
-  onOpenEditor?: (atlasInfo: AtlasInfo, url: string, row: number, col: number, onSaved: () => void) => void;
-  onOpenCrop?: (file: File, url: string, onSaved: () => void) => void;
-  onRecropExisting?: (imageSrc: string, url: string, onSaved: () => void) => void;
+  onOpenEditor?: (atlasInfo: AtlasInfo, url: string, row: number, col: number) => void;
+  onOpenCrop?: (file: File, url: string) => void;
+  onRecropExisting?: (imageSrc: string, url: string) => void;
   /** Width/height ratio for the slot thumbnails, e.g. 95/147 for portraits. Defaults to a 1:1 square (iconsets). */
   slotAspectRatio?: number;
   promptContext?: PromptContext;
@@ -55,44 +57,25 @@ export function AssetPanel({
 }: Props) {
   const { t } = useTranslation();
   const guardAgainstActivePack = useActivePackGuard();
-  const [defaultDataUrl, setDefaultDataUrl] = useState<string | null>(null);
-  const [defaultError, setDefaultError] = useState<string | null>(null);
-  const [override, setOverride] = useState<OverrideEntry | null>(null);
-  const [overrideDataUrl, setOverrideDataUrl] = useState<string | null>(null);
-  const [usedBy, setUsedBy] = useState<Set<string> | undefined>(undefined);
+  const notifyOverrideUndo = useOverrideUndo();
+  const saveOverride = useSaveOverride();
+  const setOverrideActive = useSetOverrideActive();
+  const removeOverride = useDeleteOverride();
+  const clearActivePack = useClearActivePack();
+  const defaultAsset = useDefaultAsset(cacheFolder, url);
+  const overrideData = useOverride(url).data;
+  const usageIndex = useRosterUsageIndex().data;
   const [dragOver, setDragOver] = useState(false);
 
-  const refreshOverride = async (targetUrl: string) => {
-    const entry = await window.fumbblApi.getOverride(targetUrl);
-    setOverride(entry);
-    if (entry) {
-      const dataUrl = await window.fumbblApi.readOverrideImage(targetUrl);
-      setOverrideDataUrl(dataUrl);
-    } else {
-      setOverrideDataUrl(null);
-    }
-  };
-
-  useEffect(() => {
-    if (!url) return;
-    setDefaultDataUrl(null);
-    setDefaultError(null);
-    window.fumbblApi
-      .fetchAssetImage(cacheFolder, url)
-      .then((dataUrl) => {
-        if (!dataUrl) {
-          setDefaultError(t("assetPanel.downloadError"));
-          return;
-        }
-        setDefaultDataUrl(dataUrl);
-      })
-      .catch((e) => setDefaultError(e.message));
-
-    refreshOverride(url);
-
-    const ready = getRosterUsageIndexReady();
-    ready?.then(() => setUsedBy(getRostersUsingAsset(url)));
-  }, [url, cacheFolder]);
+  const defaultDataUrl = defaultAsset.data ?? null;
+  const defaultError = defaultAsset.error
+    ? defaultAsset.error.message
+    : defaultAsset.data === null
+      ? t("assetPanel.downloadError")
+      : null;
+  const override = overrideData?.entry ?? null;
+  const overrideDataUrl = overrideData?.image ?? null;
+  const usedBy = url && usageIndex ? (usageIndex.get(url) ?? []) : undefined;
 
   // Must run on every render (Rules of Hooks) even when `url` is null, so
   // this is computed before the early return below.
@@ -114,29 +97,28 @@ export function AssetPanel({
 
   const setActive = async (active: boolean) => {
     if (!(await guardAgainstActivePack())) return;
-    await window.fumbblApi.setOverrideActive(cacheFolder, url, active);
-    await window.fumbblApi.clearActivePack();
-    await refreshOverride(url);
+    await setOverrideActive.mutateAsync({ cacheFolder, url, active });
+    await clearActivePack.mutateAsync();
   };
 
   const handleDrop = async (file: File) => {
     if (onOpenCrop) {
       // CropEditor guards + clears the active pack itself at actual save time.
-      onOpenCrop(file, url, () => refreshOverride(url));
+      onOpenCrop(file, url);
       return;
     }
     if (!(await guardAgainstActivePack())) return;
     const { base64, format } = await fileToBase64(file);
-    await window.fumbblApi.saveOverride(cacheFolder, url, base64, format);
-    await window.fumbblApi.clearActivePack();
-    await refreshOverride(url);
+    const result = await saveOverride.mutateAsync({ cacheFolder, url, base64, format });
+    await clearActivePack.mutateAsync();
+    notifyOverrideUndo(t("assetPanel.replacedToast"), { cacheFolder, url, versionId: result.undoVersionId });
   };
 
   const deleteOverride = async () => {
     if (!(await guardAgainstActivePack())) return;
-    await window.fumbblApi.deleteOverride(cacheFolder, url);
-    await window.fumbblApi.clearActivePack();
-    await refreshOverride(url);
+    const versionId = await removeOverride.mutateAsync({ cacheFolder, url });
+    await clearActivePack.mutateAsync();
+    notifyOverrideUndo(t("assetPanel.deletedToast"), { cacheFolder, url, versionId });
   };
 
   const buildPrompt = () => {
@@ -158,8 +140,8 @@ export function AssetPanel({
         {promptContext && <PromptPopover buildPrompt={buildPrompt} />}
       </div>
       <div className="mb-3 text-sm text-muted-foreground">
-        {usedBy && usedBy.size > 0
-          ? t("assetPanel.usedByPrefix", { list: [...usedBy].sort().join(", ") })
+        {usedBy && usedBy.length > 0
+          ? t("assetPanel.usedByPrefix", { list: usedBy.join(", ") })
           : usedBy === undefined
             ? t("assetPanel.usedByLoading")
             : ""}
@@ -193,7 +175,7 @@ export function AssetPanel({
             onDelete={override ? deleteOverride : undefined}
             onRecrop={
               onRecropExisting && overrideDataUrl
-                ? () => onRecropExisting(overrideDataUrl, url, () => refreshOverride(url))
+                ? () => onRecropExisting(overrideDataUrl, url)
                 : undefined
             }
           />
@@ -205,7 +187,6 @@ export function AssetPanel({
             imageSource={customActive ? "custom" : "default"}
             url={url}
             cacheFolder={cacheFolder}
-            onSaved={() => refreshOverride(url)}
             onOpenEditor={onOpenEditor}
           />
         )}

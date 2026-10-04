@@ -1,5 +1,7 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "@/shared/i18n/LanguageContext";
 import { useConfirm } from "@/shared/components/ConfirmDialogProvider";
+import { packsQuery, useActivePack } from "@/shared/api/queries";
 
 /**
  * Any ad-hoc override change (drag & drop, delete, toggle) while a pack is
@@ -13,10 +15,13 @@ import { useConfirm } from "@/shared/components/ConfirmDialogProvider";
 export function useActivePackGuard() {
   const { t } = useTranslation();
   const confirm = useConfirm();
+  const client = useQueryClient();
+  // Keeps the packs query warm so the guard below reads the cache, not the IPC.
+  useActivePack();
 
   /** Returns true if the caller should proceed (and clear the active pack if packWasActive), false to abort. */
   return async function guardAgainstActivePack(): Promise<boolean> {
-    const packs = await window.fumbblApi.listPacks();
+    const packs = await client.fetchQuery(packsQuery);
     const active = packs.find((p) => p.active);
     if (!active) return true;
     return confirm(t("packs.editWhilePackActiveConfirm", { name: active.name }));

@@ -16,7 +16,8 @@ Un seul pack actif à la fois ; l'activer désactive tous les overrides actifs p
 | `src/renderer/features/packs/index.ts` | API publique : `PacksView` |
 
 Côté main : `src/main/lib/packs.ts` (`exportPack`, `importPack`, `activatePack`, `clearActivePack`, `deletePack`, `listPacks`) — voir **main-ipc**.
-Règle transverse : `src/renderer/shared/hooks/useActivePackGuard.ts` (voir **shared-ui**) — toute mutation d'override ailleurs demande confirmation si un pack est actif, puis appelle `clearActivePack()`.
+Données (`shared/api`) : `usePacks` (`staleTime: Infinity`), mutations `useImportPack`, `useExportPack`, `useActivatePack` / `useDeletePack` (invalident **tous** les overrides : les slots montés suivent), `useClearActivePack`. Plus de `refresh()`.
+Règle transverse : `src/renderer/shared/hooks/useActivePackGuard.ts` (voir **shared-ui**) — toute mutation d'override ailleurs demande confirmation si un pack est actif (lu dans le cache `packs`, pas d'IPC), puis appelle `useClearActivePack()`.
 
 ## Pièges connus
 

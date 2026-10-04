@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
 import { OverrideEntry, OrphanCacheFile } from "@common/types";
 import { Card, CardTitle } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import { useTranslation } from "@/shared/i18n/LanguageContext";
-import { fetchAllRosters, indexRosterUsage, getRosterUsageIndexReady, getRostersUsingAsset } from "@/shared/lib/rosters";
+import { useInactiveOverrides, useOrphanFiles, useOrphanImage, useOverride, useRosterUsageIndex } from "@/shared/api/queries";
+import { useDeleteOrphanFile, useDeleteOverride } from "@/shared/api/mutations";
 import { ImageZoomButton } from "@/shared/components/ImageZoomModal";
 import { useConfirm } from "@/shared/components/ConfirmDialogProvider";
 
@@ -15,45 +15,28 @@ function formatSize(bytes: number): string {
 export function OrphansView({ cacheFolder }: { cacheFolder: string }) {
   const { t } = useTranslation();
   const confirm = useConfirm();
-  const [inactive, setInactive] = useState<OverrideEntry[]>([]);
-  const [orphanFiles, setOrphanFiles] = useState<OrphanCacheFile[]>([]);
-  const [loading, setLoading] = useState(true);
+  const inactiveQuery = useInactiveOverrides();
+  const orphanFilesQuery = useOrphanFiles(cacheFolder);
+  const removeOverride = useDeleteOverride();
+  const removeOrphanFile = useDeleteOrphanFile();
+  // Built here too (not only from Rosters) to show which roster an inactive override belongs to.
+  useRosterUsageIndex();
 
-  const refresh = async () => {
-    setLoading(true);
-    const [inactiveList, orphanList] = await Promise.all([
-      window.fumbblApi.listInactiveOverrides(),
-      window.fumbblApi.listOrphanCacheFiles(cacheFolder),
-    ]);
-    setInactive(inactiveList);
-    setOrphanFiles(orphanList);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    refresh();
-    // Make sure the roster usage index gets built even if the user never
-    // visited the Rosters tab this session, so we can show which roster an
-    // inactive override belongs to.
-    if (!getRosterUsageIndexReady()) {
-      fetchAllRosters().then((rosters) => indexRosterUsage(rosters.map((r) => r.id)));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cacheFolder]);
+  const inactive = inactiveQuery.data ?? [];
+  const orphanFiles = orphanFilesQuery.data ?? [];
+  const loading = inactiveQuery.isPending || orphanFilesQuery.isPending;
 
   // Both deletions are irreversible, hence the confirmation. No active-pack
   // guard: neither touches what the game currently loads (inactive overrides
   // are not in the cache, orphan files are not referenced by map.json).
   const deleteInactive = async (url: string) => {
     if (!(await confirm(t("orphans.deleteInactiveConfirm")))) return;
-    await window.fumbblApi.deleteOverride(cacheFolder, url);
-    refresh();
+    await removeOverride.mutateAsync({ cacheFolder, url });
   };
 
   const deleteOrphanFile = async (fileName: string) => {
     if (!(await confirm(t("orphans.deleteFileConfirm", { file: fileName })))) return;
-    await window.fumbblApi.deleteOrphanCacheFile(cacheFolder, fileName);
-    refresh();
+    await removeOrphanFile.mutateAsync({ cacheFolder, fileName });
   };
 
   return (
@@ -100,14 +83,9 @@ export function OrphansView({ cacheFolder }: { cacheFolder: string }) {
 
 function InactiveOverrideCard({ entry, onDelete }: { entry: OverrideEntry; onDelete: () => void }) {
   const { t } = useTranslation();
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [rosters, setRosters] = useState<Set<string> | undefined>(undefined);
-
-  useEffect(() => {
-    window.fumbblApi.readOverrideImage(entry.url).then(setImageSrc);
-    const ready = getRosterUsageIndexReady();
-    ready?.then(() => setRosters(getRostersUsingAsset(entry.url)));
-  }, [entry.url]);
+  const imageSrc = useOverride(entry.url).data?.image ?? null;
+  const usageIndex = useRosterUsageIndex().data;
+  const rosters = usageIndex ? (usageIndex.get(entry.url) ?? []) : undefined;
 
   return (
     <div className="flex w-56 min-w-0 flex-col gap-2 rounded-lg border border-border-strong bg-surface-raised p-3">
@@ -125,8 +103,8 @@ function InactiveOverrideCard({ entry, onDelete }: { entry: OverrideEntry; onDel
         {entry.url}
       </div>
       <div className="truncate text-xs text-faint-foreground">
-        {rosters && rosters.size > 0
-          ? t("orphans.rosterLabel", { rosters: [...rosters].sort().join(", ") })
+        {rosters && rosters.length > 0
+          ? t("orphans.rosterLabel", { rosters: rosters.join(", ") })
           : rosters !== undefined
             ? t("orphans.rosterUnknown")
             : ""}
@@ -148,11 +126,7 @@ function OrphanFileCard({
   onDelete: () => void;
 }) {
   const { t } = useTranslation();
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
-
-  useEffect(() => {
-    window.fumbblApi.readOrphanCacheFile(cacheFolder, file.fileName).then(setImageSrc);
-  }, [cacheFolder, file.fileName]);
+  const imageSrc = useOrphanImage(cacheFolder, file.fileName).data ?? null;
 
   return (
     <div className="flex w-56 min-w-0 flex-col gap-2 rounded-lg border border-border-strong bg-surface-raised p-3">
