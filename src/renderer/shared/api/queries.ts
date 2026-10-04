@@ -79,6 +79,15 @@ export function useRosterUsageIndex() {
   });
 }
 
+/** Whether the configured FFB cache folder still exists and is usable (status bar health dot). */
+export function useCacheValid(cacheFolder: string | null) {
+  return useQuery({
+    queryKey: queryKeys.cacheValid(cacheFolder ?? ""),
+    queryFn: () => window.fumbblApi.validateCacheFolder(cacheFolder!),
+    enabled: !!cacheFolder,
+  });
+}
+
 /** Original FUMBBL image (FFB cache first, then CDN). Resolves to null when the download failed. */
 export function useDefaultAsset(cacheFolder: string | null, url: string | null) {
   return useQuery({
@@ -102,8 +111,9 @@ export function useInactiveOverrides() {
   return useQuery({ queryKey: queryKeys.inactiveOverrides, queryFn: () => window.fumbblApi.listInactiveOverrides() });
 }
 
-export function useOrphanFiles(cacheFolder: string) {
+export function useOrphanFiles(cacheFolder: string, { enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
+    enabled: enabled && !!cacheFolder,
     queryKey: queryKeys.orphanFiles(cacheFolder),
     queryFn: () => window.fumbblApi.listOrphanCacheFiles(cacheFolder),
     // The game writes to its cache behind our back: re-list on every visit (cached list shown meanwhile).

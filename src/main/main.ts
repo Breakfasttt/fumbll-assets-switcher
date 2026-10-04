@@ -36,8 +36,10 @@ if (process.env.FAS_USER_DATA) app.setPath("userData", process.env.FAS_USER_DATA
 
 function createWindow(): void {
   const win = new BrowserWindow({
-    width: 1100,
-    height: 760,
+    width: 1280,
+    height: 840,
+    minWidth: 1000,
+    minHeight: 680,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,

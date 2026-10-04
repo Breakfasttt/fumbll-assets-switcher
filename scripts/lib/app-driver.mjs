@@ -103,6 +103,15 @@ export async function launchApp({ sandbox = false, port = 9333, width = 1280, he
       if (!ok) throw new Error(`click : aucun élément "${text}"`);
       await sleep(400);
     },
+    /** Real keyboard input, e.g. press("2", { ctrl: true }), press("?"), press("Escape"). */
+    async press(key, { ctrl = false, shift = false, alt = false } = {}) {
+      const modifiers = (alt ? 1 : 0) | (ctrl ? 2 : 0) | (shift ? 8 : 0);
+      const code = /^[0-9]$/.test(key) ? `Digit${key}` : /^[a-z]$/i.test(key) ? `Key${key.toUpperCase()}` : key;
+      const text = key.length === 1 && !ctrl && !alt ? key : undefined;
+      await send("Input.dispatchKeyEvent", { type: text ? "keyDown" : "rawKeyDown", key, code, modifiers, text });
+      await send("Input.dispatchKeyEvent", { type: "keyUp", key, code, modifiers });
+      await sleep(400);
+    },
     async text(selector = "body") {
       return evaluate(`document.querySelector(${JSON.stringify(selector)})?.innerText ?? ""`);
     },

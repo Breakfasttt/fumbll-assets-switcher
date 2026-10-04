@@ -23,6 +23,7 @@ export const queryClient = new QueryClient({
  */
 export const queryKeys = {
   config: ["config"] as const,
+  cacheValid: (cacheFolder: string) => ["cacheValid", cacheFolder] as const,
   rosterList: ["rosters", "list"] as const,
   roster: (id: number) => ["rosters", "detail", id] as const,
   rosterUsageIndex: ["rosters", "usageIndex"] as const,

@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "e2e");
 const filter = process.argv[2] ?? "";
-const scenarios = fs.readdirSync(DIR).filter((f) => f.endsWith(".mjs") && f.includes(filter));
+const scenarios = fs.readdirSync(DIR).filter((f) => f.endsWith(".mjs") && f !== "helpers.mjs" && f.includes(filter));
 let failed = 0;
 for (const file of scenarios) {
   console.log(`\n▶ ${file}`);

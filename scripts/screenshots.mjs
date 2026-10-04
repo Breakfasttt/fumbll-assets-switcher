@@ -17,7 +17,8 @@ fs.mkdirSync(OUT, { recursive: true });
 const app = await launchApp({ sandbox: process.argv.includes("--sandbox") });
 try {
   await sleep(500);
-  const tabs = (await app.evaluate(`${NAV}.map((e) => e.textContent.trim())`)) ?? [];
+  // Tab label only (badges carry counters).
+  const tabs = (await app.evaluate(`${NAV}.map((e) => (e.querySelector("span.flex-1") ?? e).textContent.trim())`)) ?? [];
   for (const [i, label] of tabs.entries()) {
     await app.evaluate(`${NAV}[${i}].click()`);
     await sleep(2500);

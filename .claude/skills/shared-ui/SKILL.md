@@ -13,7 +13,10 @@ description: Zone transverse renderer de fumbbl-assets-switcher — shell de l'a
 | `src/renderer/main.tsx` | `createRoot` + import `index.css` |
 | `src/renderer/index.css` | `@import "tailwindcss"` + tokens, couche base : bordure par défaut `--border`, `body` 13 px police système, scrollbars fines, focus-visible global (`--ring`), curseur pointer des boutons, `prefers-reduced-motion`. **Aucune couleur littérale** |
 | `src/renderer/global.d.ts` | `window.fumbblApi: FumbblApi` (import type depuis `src/main/preload.ts`, exception déclarée) |
-| `src/renderer/app/App.tsx` | providers (`QueryClientProvider` tout en haut, `LanguageProvider`, `ConfirmDialogProvider`) + `AppShell` : sidebar 220 px, 5 onglets `div role=button`, statut cache + « Ouvrir le dossier », rendu de la vue active ; Config forcée si pas de cache |
+| `src/renderer/app/App.tsx` | providers (`QueryClientProvider` tout en haut, `LanguageProvider`, `TooltipProvider`, `ConfirmDialogProvider`, `Toaster`) + `AppShell` : grille sidebar 200 px / contenu / status bar ; Config forcée si pas de cache ; raccourcis globaux (`Ctrl+1…5` onglets, `Ctrl+Z` = `runLastUndo`, `?` = aide) |
+| `src/renderer/app/Sidebar.tsx` | `Sidebar`, `Tab`, `TAB_ORDER` : `<nav>` de vrais `<button aria-current>`, icônes lucide, badges (customs actifs rosters / terrains en `live`, éléments nettoyables en `warning`), onglets désactivés + tooltip tant que pas de cache, `ActivePackCard` en bas |
+| `src/renderer/app/ActivePackCard.tsx` | carte « Pack actif » visible partout (nom, nb d'images, « Détacher » = `clearActivePack` + toast) ; rien si aucun pack actif |
+| `src/renderer/app/StatusBar.tsx` | barre du bas : santé du cache (`useCacheValid`, point live/danger), chemin tronqué au milieu (tooltip complet), coach, nb d'images custom en jeu, « Ouvrir le dossier », « Raccourcis » |
 
 ### Tokens — `shared/styles`
 | Fichier | Rôle |
@@ -51,6 +54,7 @@ Manquants volontairement (docs/ux-research.md §5.4) : Tabs, ScrollArea, Context
 ### Composants partagés — `shared/components`
 | Fichier | Rôle |
 |---|---|
+| `src/renderer/shared/components/ShortcutsDialog.tsx` | aide des raccourcis (touche `?` ou bouton de la status bar) : **à tenir à jour** à chaque nouveau `useHotkey` |
 | `src/renderer/shared/components/ConfirmDialogProvider.tsx` | `ConfirmDialogProvider` + `useConfirm()` → `confirm(message | {title, description, confirmLabel, destructive}): Promise<boolean>` sur **AlertDialog**. Réservé aux actions irréversibles ; le réversible passe par `notify.undoable` |
 | `src/renderer/shared/components/ImageZoomModal.tsx` | `ImageZoomButton` (loupe en bas à droite d'une vignette) → Dialog pan/zoom (molette + range 0,5–8), Reset, « Afficher dans le dossier » (`RevealTarget` override/cacheFile). Racine `<span>` qui stoppe clic/keydown : les événements React traversent le portal et remonteraient au slot parent |
 | `src/renderer/shared/components/CropEditor.tsx` | `CropEditor` + `CropTarget` : viewport 360 px au ratio cible, pan pointer, zoom molette/range, sauvegarde PNG `targetWidth×targetHeight` en override (garde pack actif). Utilisé par rosters (panneau) et pitches (dialog) |
@@ -67,7 +71,8 @@ Manquants volontairement (docs/ux-research.md §5.4) : Tabs, ScrollArea, Context
 ### Lib — `shared/lib`
 | Fichier | Rôle |
 |---|---|
-| `src/renderer/shared/lib/notify.ts` | **seul canal de feedback** : `notify.success/error/warning(msg, description?)`, `notify.promise(p, {loading, success, error})` (opérations longues), `notify.undoable(msg, {label, run})` (toast 6 s avec « Annuler »). Textes passés déjà traduits |
+| `src/renderer/shared/lib/format.ts` | `isPitchUrl(url)` (override de terrain), `truncateMiddle(text, max)` (chemins) |
+| `src/renderer/shared/lib/notify.ts` | **seul canal de feedback** (+ `runLastUndo()` : rejoue le dernier « Annuler » encore affiché, branché sur Ctrl+Z) : `notify.success/error/warning(msg, description?)`, `notify.promise(p, {loading, success, error})` (opérations longues), `notify.undoable(msg, {label, run})` (toast 6 s avec « Annuler »). Textes passés déjà traduits |
 | `src/renderer/shared/lib/utils.ts` | `cn()` = clsx + tailwind-merge **étendu** avec `COLOR_TOKENS` (liste des tokens couleur, synchronisée avec `tokens.css` — règle check-arch `twmerge-tokens`) et l'ombre `overlay` |
 | `src/renderer/shared/lib/rosters.ts` | données pures : `DIVISION_IDS`, `BB2025_ROSTER_IDS`, `extractAssetId`, `fetchAllRosters` (queryFn de `useRosterList`), `buildRosterUsageIndex(rosters)` → `Map<url, noms triés>` (queryFn de `useRosterUsageIndex`). Plus de cache module : le cache est react-query |
 
@@ -110,8 +115,8 @@ Ajouter une clé : dans les **4** dictionnaires (règle `i18n-parity`), clé `zo
 
 ## Pièges connus
 
-- Onglet initial toujours « config » ; dernier onglet non mémorisé.
-- Navigation et slots en `div role=button`, pas d'`aria-label` sur les boutons icône.
+- Onglet initial toujours « config » ; dernier onglet non mémorisé (#17).
+- Slots d'asset encore en `div role=button` (#22). Navigation : vrais boutons depuis #16.
 - Pan/zoom pointer dupliqué entre `CropEditor` et `ImageZoomModal` ; `loadImage`/`canvasToPngBase64` dupliqués avec `features/iconset`.
 - `index.html` en `lang="fr"` fixe.
 
