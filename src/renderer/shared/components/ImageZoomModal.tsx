@@ -60,64 +60,71 @@ export function ImageZoomButton({
     draggingRef.current = null;
   };
 
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        setOpen(next);
-        if (next) resetView();
-      }}
-    >
-      <DialogTrigger asChild>
-        <button
-          className="absolute bottom-1 right-1 z-10 rounded border border-border-strong bg-card/80 p-1 text-muted hover:bg-card hover:text-white"
-          title={t("zoom.openButton")}
-        >
-          <Search className="h-3.5 w-3.5" />
-        </button>
-      </DialogTrigger>
-      <DialogContent>
-        <div
-          className="relative mb-3 h-[60vh] w-full cursor-move overflow-hidden rounded border border-border-strong bg-well"
-          onWheel={(e) => {
-            e.preventDefault();
-            setZoom((z) => Math.min(Math.max(z - e.deltaY * 0.001, 0.5), 8));
-          }}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-        >
-          <img
-            src={imageSrc}
-            className="pointer-events-none absolute left-1/2 top-1/2 max-w-none"
-            style={{
-              transform: `translate(-50%, -50%) translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
-              imageRendering: "pixelated",
-            }}
-          />
-        </div>
+  // Usually rendered inside a clickable slot: React events bubble through the
+  // React tree (portals included), so clicks/keys on the trigger or inside the
+  // dialog must not reach the slot's handlers (that would toggle the slot).
+  const stopPropagation = (e: React.SyntheticEvent) => e.stopPropagation();
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted">{t("zoom.zoomLabel")}</span>
-          <input
-            type="range"
-            min={0.5}
-            max={8}
-            step={0.05}
-            value={zoom}
-            onChange={(e) => setZoom(Number(e.target.value))}
-            className="flex-1"
-          />
-          <Button size="sm" variant="outline" onClick={resetView}>
-            {t("zoom.resetButton")}
-          </Button>
-          {revealTarget && (
-            <Button size="sm" variant="outline" onClick={() => reveal(revealTarget)}>
-              {t("zoom.revealButton")}
+  return (
+    <span onClick={stopPropagation} onKeyDown={stopPropagation}>
+      <Dialog
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (next) resetView();
+        }}
+      >
+        <DialogTrigger asChild>
+          <button
+            className="absolute bottom-1 right-1 z-10 rounded border border-border-strong bg-card/80 p-1 text-muted hover:bg-card hover:text-white"
+            title={t("zoom.openButton")}
+          >
+            <Search className="h-3.5 w-3.5" />
+          </button>
+        </DialogTrigger>
+        <DialogContent>
+          <div
+            className="relative mb-3 h-[60vh] w-full cursor-move overflow-hidden rounded border border-border-strong bg-well"
+            onWheel={(e) => {
+              e.preventDefault();
+              setZoom((z) => Math.min(Math.max(z - e.deltaY * 0.001, 0.5), 8));
+            }}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+          >
+            <img
+              src={imageSrc}
+              className="pointer-events-none absolute left-1/2 top-1/2 max-w-none"
+              style={{
+                transform: `translate(-50%, -50%) translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
+                imageRendering: "pixelated",
+              }}
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted">{t("zoom.zoomLabel")}</span>
+            <input
+              type="range"
+              min={0.5}
+              max={8}
+              step={0.05}
+              value={zoom}
+              onChange={(e) => setZoom(Number(e.target.value))}
+              className="flex-1"
+            />
+            <Button size="sm" variant="outline" onClick={resetView}>
+              {t("zoom.resetButton")}
             </Button>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+            {revealTarget && (
+              <Button size="sm" variant="outline" onClick={() => reveal(revealTarget)}>
+                {t("zoom.revealButton")}
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </span>
   );
 }

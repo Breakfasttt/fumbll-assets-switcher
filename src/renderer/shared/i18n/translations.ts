@@ -28,6 +28,8 @@ const en: Dictionary = {
   "orphans.deleteButton": "Delete",
   "orphans.rosterLabel": "Roster: {rosters}",
   "orphans.rosterUnknown": "Roster: unknown",
+  "orphans.deleteInactiveConfirm": "Permanently delete this disabled custom image? This cannot be undone.",
+  "orphans.deleteFileConfirm": "Delete \"{file}\" from the FUMBBL cache folder? The client will download the original again if needed.",
 
   "zoom.openButton": "Zoom",
   "zoom.zoomLabel": "Zoom",
@@ -148,6 +150,8 @@ const fr: Dictionary = {
   "orphans.deleteButton": "Supprimer",
   "orphans.rosterLabel": "Roster : {rosters}",
   "orphans.rosterUnknown": "Roster : inconnu",
+  "orphans.deleteInactiveConfirm": "Supprimer définitivement cette image custom désactivée ? Cette action est irréversible.",
+  "orphans.deleteFileConfirm": "Supprimer « {file} » du dossier cache FUMBBL ? Le client re-téléchargera l'original si besoin.",
 
   "zoom.openButton": "Zoom",
   "zoom.zoomLabel": "Zoom",
@@ -268,6 +272,8 @@ const es: Dictionary = {
   "orphans.deleteButton": "Eliminar",
   "orphans.rosterLabel": "Plantilla: {rosters}",
   "orphans.rosterUnknown": "Plantilla: desconocida",
+  "orphans.deleteInactiveConfirm": "¿Eliminar definitivamente esta imagen personalizada desactivada? Esta acción no se puede deshacer.",
+  "orphans.deleteFileConfirm": "¿Eliminar «{file}» de la carpeta de caché de FUMBBL? El cliente volverá a descargar el original si es necesario.",
 
   "zoom.openButton": "Zoom",
   "zoom.zoomLabel": "Zoom",
@@ -388,6 +394,8 @@ const de: Dictionary = {
   "orphans.deleteButton": "Löschen",
   "orphans.rosterLabel": "Kader: {rosters}",
   "orphans.rosterUnknown": "Kader: unbekannt",
+  "orphans.deleteInactiveConfirm": "Dieses deaktivierte benutzerdefinierte Bild endgültig löschen? Dies kann nicht rückgängig gemacht werden.",
+  "orphans.deleteFileConfirm": "„{file}“ aus dem FUMBBL-Cache-Ordner löschen? Der Client lädt das Original bei Bedarf erneut herunter.",
 
   "zoom.openButton": "Zoom",
   "zoom.zoomLabel": "Zoom",

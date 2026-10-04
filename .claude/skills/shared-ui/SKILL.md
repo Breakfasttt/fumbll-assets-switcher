@@ -32,7 +32,7 @@ Manquants : Input, Tabs, Tooltip, Toast, Slider, Badge, ToggleGroup, ScrollArea.
 | Fichier | Rôle |
 |---|---|
 | `src/renderer/shared/components/ConfirmDialogProvider.tsx` | `ConfirmDialogProvider` + `useConfirm()` → `confirm(message): Promise<boolean>` (Dialog Radix, remplace `window.confirm`) |
-| `src/renderer/shared/components/ImageZoomModal.tsx` | `ImageZoomButton` (loupe en bas à droite d'une vignette) → Dialog pan/zoom (molette + range 0,5–8), Reset, « Afficher dans le dossier » (`RevealTarget` override/cacheFile) |
+| `src/renderer/shared/components/ImageZoomModal.tsx` | `ImageZoomButton` (loupe en bas à droite d'une vignette) → Dialog pan/zoom (molette + range 0,5–8), Reset, « Afficher dans le dossier » (`RevealTarget` override/cacheFile). Racine `<span>` qui stoppe clic/keydown : les événements React traversent le portal et remonteraient au slot parent |
 | `src/renderer/shared/components/CropEditor.tsx` | `CropEditor` + `CropTarget` : viewport 360 px au ratio cible, pan pointer, zoom molette/range, sauvegarde PNG `targetWidth×targetHeight` en override (garde pack actif). Utilisé par rosters (panneau) et pitches (dialog) |
 
 ### Hooks — `shared/hooks`

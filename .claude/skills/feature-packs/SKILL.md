@@ -20,7 +20,7 @@ Règle transverse : `src/renderer/shared/hooks/useActivePackGuard.ts` (voir **sh
 
 ## Pièges connus
 
-- **Bug** : `activatePack` ne copie le fichier du pack que si `overrides/<MD5>.<ext>` n'existe pas → une image perso de même URL/extension masque celle du pack (carte 3).
+- Activer un pack remplace l'entrée d'index des overrides perso de même URL (une entrée par URL) ; le fichier perso reste sur disque mais n'est plus référencé (sera exposé par l'historique #14). Fichiers du pack nommés `pack-<packId>-<MD5>.<ext>`.
 - `alert()` natifs sur erreur export/import (baseline carte 8).
 - Pas d'action « désactiver le pack », pas d'aperçu du contenu, pas de champ description (`undefined` passé à l'export).
 - Le pack actif n'est visible que dans cet onglet ; l'utilisateur ne le voit pas en éditant.

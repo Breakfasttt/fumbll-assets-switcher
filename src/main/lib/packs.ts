@@ -29,6 +29,15 @@ function packFolder(packId: string): string {
   return path.join(packsDir(), packId);
 }
 
+// Pack files are copied into overridesDir() under a pack-specific name so they
+// never collide with (nor get masked by) an ad-hoc override of the same URL,
+// which is stored as plain `<MD5>.<ext>` (see overrides.saveOverrideFile).
+const PACK_FILE_PREFIX_RE = /^pack-[0-9a-f-]+-/;
+
+function packOverrideFileName(packId: string, fileName: string): string {
+  return `pack-${packId}-${fileName.replace(PACK_FILE_PREFIX_RE, "")}`;
+}
+
 function indexPath(): string {
   return path.join(packsDir(), PACKS_INDEX_FILE);
 }
@@ -72,13 +81,14 @@ export async function exportPack(name: string, description: string | undefined, 
     name,
     description,
     createdAt: new Date().toISOString(),
-    entries: activeEntries.map((entry) => ({ url: entry.url, fileName: entry.fileName })),
+    // Strip our internal pack prefix: the zip only carries plain `<MD5>.<ext>` names.
+    entries: activeEntries.map((entry) => ({ url: entry.url, fileName: entry.fileName.replace(PACK_FILE_PREFIX_RE, "") })),
   };
 
   const zip = new AdmZip();
   zip.addFile("manifest.json", Buffer.from(JSON.stringify(manifest, null, 2)));
-  for (const entry of manifest.entries) {
-    const buffer = await fs.readFile(overrideFilePath(entry.fileName));
+  for (const [i, entry] of manifest.entries.entries()) {
+    const buffer = await fs.readFile(overrideFilePath(activeEntries[i].fileName));
     zip.addFile(entry.fileName, buffer);
   }
   await fs.writeFile(destZipPath, zip.toBuffer());
@@ -149,15 +159,18 @@ export async function activatePack(cacheFolder: string, packId: string): Promise
     }
   }
 
+  await fs.mkdir(path.dirname(overrideFilePath("_")), { recursive: true });
   for (const entry of pack.entries) {
-    const sourcePath = path.join(packFolder(packId), entry.fileName);
-    const targetPath = overrideFilePath(entry.fileName);
+    // Always copy from the pack's own storage: an ad-hoc override of the same
+    // URL keeps its own file and can no longer mask the pack's image.
+    const fileName = packOverrideFileName(packId, entry.fileName);
     try {
-      await fs.access(targetPath);
+      await fs.copyFile(path.join(packFolder(packId), entry.fileName), overrideFilePath(fileName));
     } catch {
-      await fs.copyFile(sourcePath, targetPath);
+      console.error(`activatePack: file "${entry.fileName}" missing from pack ${packId}, skipping`);
+      continue;
     }
-    await registerActiveOverride(cacheFolder, entry.url, entry.fileName, packId);
+    await registerActiveOverride(cacheFolder, entry.url, fileName, packId);
   }
 
   index.activePackId = packId;

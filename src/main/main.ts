@@ -25,7 +25,8 @@ import { fetchRoster, fetchDivisionRosters, fetchAssetImageDataUrl, fetchAssetIm
 import { listPacks, exportPack, importPack, activatePack, deletePack, clearActivePack } from "./lib/packs";
 import { WEATHER_CODES } from "../shared/types";
 
-const isDev = !app.isPackaged;
+// Dev mode only when launched by `npm run dev` (Vite server); `npm start` serves the built renderer.
+const isDev = process.argv.includes("--dev");
 
 function createWindow(): void {
   const win = new BrowserWindow({
@@ -42,7 +43,8 @@ function createWindow(): void {
     win.loadURL("http://localhost:5173");
     win.webContents.openDevTools({ mode: "detach" });
   } else {
-    win.loadFile(path.join(__dirname, "../renderer/index.html"));
+    // __dirname = dist/main/main (tsc rootDir src), Vite outputs to dist/renderer.
+    win.loadFile(path.join(__dirname, "../../renderer/index.html"));
   }
 }
 

@@ -20,6 +20,7 @@ La refonte du slot (carte de recherche UX) supprimera l'imbrication `div role=bu
 Refonte visuelle du slot.
 
 ## Checklist
-- [ ] `stopPropagation` sur clic + Entrée/Espace du bouton loupe
-- [ ] vérifié sur portrait, iconset, pitch
-- [ ] `npm run verify` OK
+- [x] `stopPropagation` (clic + keydown) à la racine d'`ImageZoomButton`, couvre aussi le contenu de la Dialog (portal)
+- [x] point unique couvrant portrait, iconset et pitch (test manuel à faire à la validation)
+- [x] skills asset-editor / pitches / shared-ui à jour
+- [x] `npm run verify` OK

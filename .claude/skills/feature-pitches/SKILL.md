@@ -27,7 +27,6 @@ Dépendances partagées : `shared/components/CropEditor`, `ImageZoomModal`, `sha
 ## Pièges connus
 
 - `PitchWeatherSlot` **duplique** la logique et le markup de `asset-editor/AssetPanel` (défaut, override, setActive, delete, drop, recrop, pastille) → à factoriser lors de la refonte.
-- Même bug de loupe qui active le slot (carte 2).
 - Crop en Dialog ici mais en panneau latéral pour les portraits : incohérent.
 - Noms des pitches spéciaux en anglais en dur.
 

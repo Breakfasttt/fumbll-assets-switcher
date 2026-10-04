@@ -30,7 +30,7 @@ Dépendances : `@/features/iconset` (`AtlasBreakdown` affiché sous les slots si
 
 ## Pièges connus
 
-- **Bug** : `ImageZoomButton` est dans le slot `role=button` sans `stopPropagation` → cliquer la loupe active/désactive le slot (carte 2). Même bug dans `pitches`.
+- `ImageZoomButton` est imbriqué dans le slot cliquable : il stoppe lui-même la propagation (clic + clavier, portal de la Dialog inclus). Tout nouveau bouton placé dans un slot doit faire pareil (`e.stopPropagation()`), en attendant la refonte #22.
 - `div role=button` + `<button>` imbriqués ; ✕ texte sans `aria-label`.
 - Logique quasi identique dupliquée dans `features/pitches/PitchView.tsx` (`PitchWeatherSlot`) : à factoriser dans un composant partagé lors de la refonte.
 - Affordance faible : l'état actif n'est signalé que par bordure + pastille orange.

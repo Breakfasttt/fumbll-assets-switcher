@@ -18,7 +18,7 @@ IPC : `listInactiveOverrides`, `listOrphanCacheFiles`, `readOverrideImage`, `rea
 
 ## Pièges connus
 
-- **Suppression sans confirmation ni garde de pack** (carte 4) — action destructive irréversible.
+- Suppressions irréversibles : confirmées via `useConfirm` (`orphans.deleteInactiveConfirm`, `orphans.deleteFileConfirm`). Pas de garde pack actif (rien de ce que le jeu charge n'est touché).
 - Pas de sélection multiple / suppression groupée.
 - Cartes `w-56` dupliquées avec `packs` (pas de composant commun).
 - Réutilise la clé i18n `roster.loading` pour son état de chargement.

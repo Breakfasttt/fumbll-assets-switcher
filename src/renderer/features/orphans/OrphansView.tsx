@@ -5,6 +5,7 @@ import { Button } from "@/shared/ui/button";
 import { useTranslation } from "@/shared/i18n/LanguageContext";
 import { fetchAllRosters, indexRosterUsage, getRosterUsageIndexReady, getRostersUsingAsset } from "@/shared/lib/rosters";
 import { ImageZoomButton } from "@/shared/components/ImageZoomModal";
+import { useConfirm } from "@/shared/components/ConfirmDialogProvider";
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -13,6 +14,7 @@ function formatSize(bytes: number): string {
 
 export function OrphansView({ cacheFolder }: { cacheFolder: string }) {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [inactive, setInactive] = useState<OverrideEntry[]>([]);
   const [orphanFiles, setOrphanFiles] = useState<OrphanCacheFile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,12 +41,17 @@ export function OrphansView({ cacheFolder }: { cacheFolder: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cacheFolder]);
 
+  // Both deletions are irreversible, hence the confirmation. No active-pack
+  // guard: neither touches what the game currently loads (inactive overrides
+  // are not in the cache, orphan files are not referenced by map.json).
   const deleteInactive = async (url: string) => {
+    if (!(await confirm(t("orphans.deleteInactiveConfirm")))) return;
     await window.fumbblApi.deleteOverride(cacheFolder, url);
     refresh();
   };
 
   const deleteOrphanFile = async (fileName: string) => {
+    if (!(await confirm(t("orphans.deleteFileConfirm", { file: fileName })))) return;
     await window.fumbblApi.deleteOrphanCacheFile(cacheFolder, fileName);
     refresh();
   };

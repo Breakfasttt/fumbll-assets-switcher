@@ -6,7 +6,7 @@
   "main": "dist/main/main/main.js",
   "scripts": {
     "build": "tsc -p tsconfig.main.json && vite build",
-    "dev": "concurrently -k -n MAIN,VITE,ELECTRON -c blue,green,magenta \"tsc -p tsconfig.main.json -w\" \"vite\" \"wait-on tcp:5173 dist/main/main/main.js && electron .\"",
+    "dev": "concurrently -k -n MAIN,VITE,ELECTRON -c blue,green,magenta \"tsc -p tsconfig.main.json -w\" \"vite\" \"wait-on tcp:5173 dist/main/main/main.js && electron . --dev\"",
     "start": "electron .",
     "typecheck": "tsc -p tsconfig.main.json --noEmit && tsc -p tsconfig.renderer.json --noEmit",
     "check-arch": "node scripts/check-arch.mjs",

@@ -9,7 +9,7 @@ description: Process main Electron de fumbbl-assets-switcher — fenêtre, route
 
 | Fichier | Rôle |
 |---|---|
-| `src/main/main.ts` | `createWindow` (1100×760, `contextIsolation`, dev = Vite 5173 + DevTools, prod = `loadFile`) ; **tous** les `ipcMain.handle` ; logique `fumbbl:fetchAssetImage` (cache FFB > CDN + écriture cache, sauf si override actif) |
+| `src/main/main.ts` | `createWindow` (1100×760, `contextIsolation`) ; mode dev **uniquement** si lancé avec `--dev` (`npm run dev`) = Vite 5173 + DevTools, sinon `loadFile(dist/renderer/index.html)` (`npm start` après `npm run build`) ; **tous** les `ipcMain.handle` ; logique `fumbbl:fetchAssetImage` (cache FFB > CDN + écriture cache, sauf si override actif) |
 | `src/main/preload.ts` | objet `api` exposé en `window.fumbblApi` via `contextBridge` ; `export type FumbblApi` |
 | `src/main/config.ts` | `loadConfig` / `saveConfig` → `userData/config.json` (défaut `{cacheFolder: null, coachName: null, language: "en"}`) |
 | `src/main/lib/cacheWriter.ts` | cache FFB : `computeHash` (MD5 URL), `map.json` (`readMapJson`/`writeMapJson`/`withMapJson` = file d'écriture par dossier), `validateCacheFolder`, `putImageInCache`, `removeImageFromCache`, `listCacheEntries`, `listOrphanCacheFiles`, `readCacheFileDataUrl`, `deleteOrphanCacheFile`, `readCachedImageDataUrl` |
@@ -38,8 +38,9 @@ le cache FFB sous `MD5(url)` en majuscules + entrée `map.json`. Désactiver = r
 
 ## Pièges connus
 
-- **Bug prod** : `loadFile(path.join(__dirname, "../renderer/index.html"))` avec `__dirname = dist/main/main` → `dist/main/renderer/index.html`, alors que Vite sort dans `dist/renderer` (carte 1).
-- **Bug packs** : copie conditionnelle dans `activatePack` (carte 3).
+- `__dirname` du main compilé = `dist/main/main` (rootDir `src`) : chemins relatifs à calculer depuis là.
+- Lancer Electron depuis le terminal de VS Code / Claude Code : `ELECTRON_RUN_AS_NODE=1` est hérité → `app` undefined. Utiliser `env -u ELECTRON_RUN_AS_NODE npx electron .`.
+- Une seule entrée par URL dans `overrides.json`. Fichiers d'un pack activé : `overrides/pack-<packId>-<MD5>.<ext>` (`packOverrideFileName`), jamais en collision avec un override perso `<MD5>.<ext>` ; l'export retire le préfixe (`PACK_FILE_PREFIX_RE`). Activer un pack remplace l'entrée perso de l'index (fichier perso conservé sur disque, non référencé → #14).
 - `MIME_BY_EXT` dupliqué (`cacheWriter.ts`, `overrides.ts`, variante dans `fumbblApi.ts`).
 - Canaux exposés jamais appelés : `listCacheEntries`, `listOverrides`, `weatherCodes` (baseline `ipc-unused`, carte 7).
 - `@types/adm-zip` en `dependencies` (carte 6). Pas de packaging (electron-builder/forge absent).
