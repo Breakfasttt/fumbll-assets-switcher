@@ -21,7 +21,7 @@ export function PlayerEditor({ roster, cacheFolder }: { roster: RosterInfo; cach
               if (e.key === "Enter" || e.key === " ") setSelected(position);
             }}
             className={cn(
-              "flex cursor-pointer flex-col rounded px-3 py-2 border border-transparent hover:bg-card-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+              "flex cursor-pointer flex-col rounded px-3 py-2 border border-transparent hover:bg-card-raised focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent",
               selected?.name === position.name && "bg-card-raised border-accent"
             )}
           >

@@ -35,7 +35,7 @@ export function PromptPopover({ buildPrompt }: { buildPrompt: () => string }) {
           readOnly
           value={prompt}
           rows={8}
-          className="w-full resize-none rounded border border-border-strong bg-input p-2 text-xs text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="w-full resize-none rounded border border-border-strong bg-input p-2 text-xs text-white focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent"
         />
         <div className="mt-2 flex gap-2">
           <Button size="sm" onClick={copy}>

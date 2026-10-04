@@ -217,7 +217,7 @@ function PitchWeatherSlot({
           style={{ width: THUMB_WIDTH + 16 }}
         >
           {defaultActive && (
-            <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-accent-active shadow-[0_0_0_2px_theme(colors.card)]" />
+            <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-accent-active shadow-[0_0_0_2px_var(--color-card)]" />
           )}
           {activeDataUrlOrDefault(defaultDataUrl, defaultError)}
           <div className="text-xs text-faint">{t("assetPanel.slot.default")}</div>
@@ -248,7 +248,7 @@ function PitchWeatherSlot({
           style={{ width: THUMB_WIDTH + 16 }}
         >
           {customActive && (
-            <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-accent-active shadow-[0_0_0_2px_theme(colors.card)]" />
+            <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-accent-active shadow-[0_0_0_2px_var(--color-card)]" />
           )}
           {override && (
             <button

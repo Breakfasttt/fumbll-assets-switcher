@@ -18,7 +18,7 @@ feature visée (table ci-dessous). Chaque skill liste tous les fichiers de son p
 | Couche | Techno |
 |---|---|
 | Process main | Electron 33, TypeScript → CommonJS (`tsc -p tsconfig.main.json`), `adm-zip`, `fast-xml-parser` |
-| Renderer | React 18, Vite 6, Tailwind 3 (tokens dans `tailwind.config.js`), Radix + cva + `cn()` façon shadcn, lucide-react |
+| Renderer | React 18, Vite 6, Tailwind 4 via `@tailwindcss/vite` (tokens CSS-first : bloc `@theme` de `src/renderer/index.css`, pas de `tailwind.config.js`), Radix + cva + `cn()` façon shadcn, lucide-react |
 | Contrats | `src/shared/types.ts` (types + constantes partagés main/renderer, aucun import de paquet) |
 | Outillage | `scripts/check-arch.mjs`, `scripts/kanban.mjs`, config `architecture.config.mjs` (zéro dépendance) |
 
@@ -124,6 +124,7 @@ cocher la checklist, mettre à jour le skill feature si des fichiers/comportemen
 | `npm run check-arch` | règles d'architecture + kanban (`-- --rule=<id>` pour une seule règle) |
 | `npm run verify` | typecheck + check-arch (à lancer avant de passer une carte en à valider) |
 | `npm run build` | build main + renderer |
+| `npm run screenshots` | après `build` : lance l'app via CDP et capture chaque onglet dans `.screenshots/` (vérif visuelle des cartes UI ; `-- --roster=Dwarf`) |
 | `npm run check-identity` | vérifie le compte git perso (commit) + compte GitHub actif `gh` (push) |
 
 Hooks : `git config core.hooksPath .githooks` (activé sur ce poste). `pre-commit` = identité perso + check-arch ; `pre-push` = identité perso + compte `gh` actif.

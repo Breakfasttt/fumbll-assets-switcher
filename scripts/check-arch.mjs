@@ -240,7 +240,7 @@ for (const file of SOURCES.filter((f) => config.ipcForbiddenIn.some((d) => start
 for (const file of SOURCES.filter((f) => processOf(f) === "renderer" && f.endsWith(".tsx"))) {
   const text = stripComments(sourceText[file]);
   for (const m of text.matchAll(/(?:\b(?:text|bg|border|ring|fill|stroke|from|to|via|shadow|outline)-\[#[0-9a-fA-F]{3,8}\]|(?:color|background|backgroundColor|borderColor)\s*:\s*["']#[0-9a-fA-F]{3,8}["'])/g)) {
-    report("no-hardcoded-color", "error", file, lineOf(text, m.index), `couleur en dur "${m[0]}" — utiliser un token tailwind.config.js`);
+    report("no-hardcoded-color", "error", file, lineOf(text, m.index), `couleur en dur "${m[0]}" — utiliser un token (@theme de index.css)`);
   }
 }
 for (const file of SOURCES.filter((f) => processOf(f) === "renderer")) {

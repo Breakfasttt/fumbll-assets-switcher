@@ -245,13 +245,13 @@ function AssetSlot({
         if (e.key === "Enter" || e.key === " ") onClick();
       }}
       className={cn(
-        "relative flex min-h-[160px] cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-border-strong bg-card p-3 hover:border-faint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+        "relative flex min-h-[160px] cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-border-strong bg-card p-3 hover:border-faint focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent",
         active && "border-accent bg-card-raised"
       )}
       style={{ width: thumbWidth + 24 }}
     >
       {active && (
-        <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-accent-active shadow-[0_0_0_2px_theme(colors.card)]" />
+        <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-accent-active shadow-[0_0_0_2px_var(--color-card)]" />
       )}
       {imageSrc ? (
         <div className="relative">
@@ -331,14 +331,14 @@ function DropSlot({
         if (file) onDrop(file);
       }}
       className={cn(
-        "relative flex min-h-[160px] cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed border-border-strong bg-card p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+        "relative flex min-h-[160px] cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed border-border-strong bg-card p-3 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent",
         (dragOver || active) && "border-accent bg-card-raised",
         !imageSrc && "border-dashed"
       )}
       style={{ width: thumbWidth + 24 }}
     >
       {active && (
-        <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-accent-active shadow-[0_0_0_2px_theme(colors.card)]" />
+        <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-accent-active shadow-[0_0_0_2px_var(--color-card)]" />
       )}
       {onDelete && (
         <button

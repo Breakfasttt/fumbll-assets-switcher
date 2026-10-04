@@ -68,9 +68,8 @@ export default {
     // --- Build / outillage
     vite: { scope: "build", reason: "bundler renderer" },
     "@vitejs/plugin-react": { scope: "build", reason: "bundler renderer" },
-    tailwindcss: { scope: "build", reason: "styles" },
-    postcss: { scope: "build", reason: "styles" },
-    autoprefixer: { scope: "build", reason: "styles" },
+    tailwindcss: { scope: "build", reason: "styles (Tailwind 4, tokens CSS-first dans index.css)" },
+    "@tailwindcss/vite": { scope: "build", reason: "intégration Tailwind 4 dans Vite (remplace postcss + autoprefixer)" },
     typescript: { scope: "build", reason: "typage" },
     concurrently: { scope: "build", reason: "npm run dev" },
     "wait-on": { scope: "build", reason: "npm run dev" },

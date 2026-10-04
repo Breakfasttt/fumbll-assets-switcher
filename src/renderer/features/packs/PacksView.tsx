@@ -70,7 +70,7 @@ export function PacksView({ cacheFolder }: { cacheFolder: string }) {
             value={exportName}
             onChange={(e) => setExportName(e.target.value)}
             placeholder={t("packs.nameInputPlaceholder")}
-            className="w-56 rounded border border-border-strong bg-input px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="w-56 rounded border border-border-strong bg-input px-3 py-2 text-sm focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent"
           />
           <Button size="sm" onClick={handleExport} disabled={!exportName.trim()}>
             {t("packs.exportButton")}

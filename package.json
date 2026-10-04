@@ -12,19 +12,19 @@
     "check-arch": "node scripts/check-arch.mjs",
     "kanban": "node scripts/kanban.mjs",
     "verify": "npm run typecheck && npm run check-arch",
-    "check-identity": "node scripts/check-git-identity.mjs --push"
+    "check-identity": "node scripts/check-git-identity.mjs --push",
+    "screenshots": "node scripts/screenshots.mjs"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
     "@types/adm-zip": "^0.5.8",
     "@types/node": "^22.10.0",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.7.0",
-    "autoprefixer": "^10.6.0",
     "concurrently": "^9.1.0",
     "electron": "^33.2.0",
-    "postcss": "^8.5.28",
-    "tailwindcss": "^3.4.19",
+    "tailwindcss": "^4.3.3",
     "typescript": "^5.7.2",
     "vite": "^6.0.3",
     "wait-on": "^8.0.1"
