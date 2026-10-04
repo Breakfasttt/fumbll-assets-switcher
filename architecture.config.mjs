@@ -61,6 +61,7 @@ export default {
     clsx: { scope: "renderer", reason: "cn()" },
     "tailwind-merge": { scope: "renderer", reason: "cn()" },
     "lucide-react": { scope: "renderer", reason: "icônes" },
+    sonner: { scope: "renderer", reason: "toasts : succès/erreur/promesse/annuler (shared/lib/notify.ts), remplace alert()" },
     // --- Build / outillage
     vite: { scope: "build", reason: "bundler renderer" },
     "@vitejs/plugin-react": { scope: "build", reason: "bundler renderer" },
@@ -98,8 +99,6 @@ export default {
   // Violations connues tolérées, chacune rattachée à la carte qui doit la corriger.
   // `count` = nombre exact de violations tolérées : plus (nouveau code) ou moins (count à baisser) fait échouer.
   baseline: [
-    { rule: "no-native-dialog", file: "src/renderer/features/config/ConfigView.tsx", card: 8, count: 3 },
-    { rule: "no-native-dialog", file: "src/renderer/features/packs/PacksView.tsx", card: 8, count: 2 },
-    { rule: "ipc-unused", file: "src/main/preload.ts", card: 8, count: 4 },
+    { rule: "ipc-unused", file: "src/main/preload.ts", card: 22, count: 4 },
   ],
 };

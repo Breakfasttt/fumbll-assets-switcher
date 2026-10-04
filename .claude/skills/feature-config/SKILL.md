@@ -18,7 +18,7 @@ Dépendances partagées : `shared/i18n/LanguageContext` (`language`, `setLanguag
 
 ## Comportement actuel
 
-- `detect()` : `fumbblApi.detectCoaches()` → garde les coachs avec `cachePath` → prend **le premier** ; `alert()` si aucun ou plusieurs. Sauve `{cacheFolder, coachName}`.
+- `detect()` : `fumbblApi.detectCoaches()` → garde les coachs avec `cachePath` → prend **le premier** ; toast d'erreur si aucun, toast d'avertissement listant les coachs si plusieurs ; toast de succès une fois configuré. Sauve `{cacheFolder, coachName}`.
 - `selectManually()` : `selectFolder()` → `validateCacheFolder()` (présence de `map.json` / dossier valide) → sauve `{cacheFolder, coachName: null}`.
 - `onConfigured(folder)` → App met à jour le state et bascule sur l'onglet Rosters.
 - La langue est sauvée par `LanguageContext.setLanguage` (load + save complet de `config.json`).
@@ -29,7 +29,6 @@ Dépendances partagées : `shared/i18n/LanguageContext` (`language`, `setLanguag
 
 ## Pièges connus
 
-- `alert()` natifs (baseline `no-native-dialog`, carte 8).
 - Config relue/réécrite entièrement côté renderer à 3 endroits (ici ×2, LanguageContext) : risque d'écrasement concurrent. `coachName` n'est relu nulle part.
 - Plusieurs coachs détectés : le premier gagne sans choix utilisateur.
 - Auto-détection Windows uniquement.

@@ -4,6 +4,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { useTranslation } from "@/shared/i18n/LanguageContext";
 import { LANGUAGES } from "@common/types";
 import { LANGUAGE_NAMES } from "@/shared/i18n/translations";
+import { notify } from "@/shared/lib/notify";
 
 export function ConfigView({
   cacheFolder,
@@ -18,20 +19,20 @@ export function ConfigView({
     const coaches = await window.fumbblApi.detectCoaches();
     const valid = coaches.filter((c) => c.cachePath);
     if (valid.length === 0) {
-      alert(t("config.alert.noCoachDetected"));
+      notify.error(t("config.notify.noCoachDetected"));
       return;
     }
     const chosen = valid[0];
     if (valid.length > 1) {
-      alert(
-        t("config.alert.multipleCoaches", {
-          list: valid.map((c) => `${c.coachName} -> ${c.cachePath}`).join("\n"),
-        })
+      notify.warning(
+        t("config.notify.multipleCoaches", { coach: chosen.coachName }),
+        valid.map((c) => `${c.coachName} → ${c.cachePath}`).join("\n")
       );
     }
     if (!chosen?.cachePath) return;
     const current = await window.fumbblApi.loadConfig();
     await window.fumbblApi.saveConfig({ ...current, cacheFolder: chosen.cachePath, coachName: chosen.coachName });
+    notify.success(t("config.notify.cacheConfigured", { folder: chosen.cachePath }));
     onConfigured(chosen.cachePath);
   };
 
@@ -40,11 +41,12 @@ export function ConfigView({
     if (!folder) return;
     const ok = await window.fumbblApi.validateCacheFolder(folder);
     if (!ok) {
-      alert(t("config.alert.invalidFolder"));
+      notify.error(t("config.notify.invalidFolder"));
       return;
     }
     const current = await window.fumbblApi.loadConfig();
     await window.fumbblApi.saveConfig({ ...current, cacheFolder: folder, coachName: null });
+    notify.success(t("config.notify.cacheConfigured", { folder }));
     onConfigured(folder);
   };
 

@@ -4,6 +4,7 @@ import { Card, CardTitle } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import { useTranslation } from "@/shared/i18n/LanguageContext";
 import { useConfirm } from "@/shared/components/ConfirmDialogProvider";
+import { notify } from "@/shared/lib/notify";
 
 export function PacksView({ cacheFolder }: { cacheFolder: string }) {
   const { t } = useTranslation();
@@ -29,10 +30,14 @@ export function PacksView({ cacheFolder }: { cacheFolder: string }) {
     const destPath = await window.fumbblApi.selectSaveFile(`${name}.zip`);
     if (!destPath) return;
     try {
-      await window.fumbblApi.exportPack(name, undefined, destPath);
+      await notify.promise(window.fumbblApi.exportPack(name, undefined, destPath), {
+        loading: t("packs.exporting"),
+        success: t("packs.exportSuccess", { name }),
+        error: (e) => ((e as Error)?.message?.includes("No active") ? t("packs.exportEmpty") : t("packs.exportError")),
+      });
       setExportName("");
-    } catch (e: any) {
-      alert(e?.message?.includes("No active") ? t("packs.exportEmpty") : t("packs.exportError"));
+    } catch {
+      // already reported by the toast
     }
   };
 
@@ -40,10 +45,14 @@ export function PacksView({ cacheFolder }: { cacheFolder: string }) {
     const zipPath = await window.fumbblApi.selectZipFile();
     if (!zipPath) return;
     try {
-      await window.fumbblApi.importPack(zipPath);
+      await notify.promise(window.fumbblApi.importPack(zipPath), {
+        loading: t("packs.importing"),
+        success: (pack) => t("packs.importSuccess", { name: pack.name }),
+        error: t("packs.importError"),
+      });
       await refresh();
     } catch {
-      alert(t("packs.importError"));
+      // already reported by the toast
     }
   };
 

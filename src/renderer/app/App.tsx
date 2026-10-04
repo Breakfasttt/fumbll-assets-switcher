@@ -4,6 +4,7 @@ import { useCacheFolder } from "@/shared/hooks/useCacheFolder";
 import { LanguageProvider, useTranslation } from "@/shared/i18n/LanguageContext";
 import { ConfirmDialogProvider } from "@/shared/components/ConfirmDialogProvider";
 import { TooltipProvider } from "@/shared/ui/tooltip";
+import { Toaster } from "@/shared/ui/toaster";
 import { ConfigView } from "@/features/config";
 import { RosterView } from "@/features/rosters";
 import { PitchView } from "@/features/pitches";
@@ -18,6 +19,7 @@ export function App() {
       <TooltipProvider>
         <ConfirmDialogProvider>
           <AppShell />
+          <Toaster />
         </ConfirmDialogProvider>
       </TooltipProvider>
     </LanguageProvider>
