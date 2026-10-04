@@ -154,11 +154,13 @@ const en: Dictionary = {
   "pixelEditor.saveButton": "Save atlas",
   "pixelEditor.cancelButton": "Cancel",
 
-  "cropEditor.title": "Crop portrait",
+  "cropEditor.title": "Crop image",
   "cropEditor.sizeHint": "Final size: {w}×{h} px — drag to reposition, scroll or slider to zoom",
   "cropEditor.zoomLabel": "Zoom",
   "cropEditor.saveButton": "Crop and save",
   "cropEditor.cancelButton": "Cancel",
+  "cropEditor.previewLabel": "Real size",
+  "cropEditor.saveShortcut": "Ctrl+Enter",
 
   "pitch.title": "Pitches by weather",
   "pitch.selectPlaceholder": "Choose a pitch...",
@@ -343,11 +345,13 @@ const fr: Dictionary = {
   "pixelEditor.saveButton": "Valider et sauvegarder l'atlas",
   "pixelEditor.cancelButton": "Annuler",
 
-  "cropEditor.title": "Recadrer le portrait",
+  "cropEditor.title": "Recadrer l'image",
   "cropEditor.sizeHint": "Taille finale : {w}×{h} px — glisser pour repositionner, molette ou curseur pour zoomer",
   "cropEditor.zoomLabel": "Zoom",
   "cropEditor.saveButton": "Valider et recadrer",
   "cropEditor.cancelButton": "Annuler",
+  "cropEditor.previewLabel": "Taille réelle",
+  "cropEditor.saveShortcut": "Ctrl+Entrée",
 
   "pitch.title": "Terrains par météo",
   "pitch.selectPlaceholder": "Choisir un terrain...",
@@ -532,11 +536,13 @@ const es: Dictionary = {
   "pixelEditor.saveButton": "Guardar atlas",
   "pixelEditor.cancelButton": "Cancelar",
 
-  "cropEditor.title": "Recortar retrato",
+  "cropEditor.title": "Recortar la imagen",
   "cropEditor.sizeHint": "Tamaño final: {w}×{h} px — arrastra para reposicionar, rueda o control deslizante para zoom",
   "cropEditor.zoomLabel": "Zoom",
   "cropEditor.saveButton": "Recortar y guardar",
   "cropEditor.cancelButton": "Cancelar",
+  "cropEditor.previewLabel": "Tamaño real",
+  "cropEditor.saveShortcut": "Ctrl+Intro",
 
   "pitch.title": "Campos por clima",
   "pitch.selectPlaceholder": "Elige un campo...",
@@ -721,11 +727,13 @@ const de: Dictionary = {
   "pixelEditor.saveButton": "Atlas speichern",
   "pixelEditor.cancelButton": "Abbrechen",
 
-  "cropEditor.title": "Porträt zuschneiden",
+  "cropEditor.title": "Bild zuschneiden",
   "cropEditor.sizeHint": "Endgröße: {w}×{h} px — ziehen zum Verschieben, Scrollen oder Schieberegler zum Zoomen",
   "cropEditor.zoomLabel": "Zoom",
   "cropEditor.saveButton": "Zuschneiden und speichern",
   "cropEditor.cancelButton": "Abbrechen",
+  "cropEditor.previewLabel": "Originalgröße",
+  "cropEditor.saveShortcut": "Strg+Eingabe",
 
   "pitch.title": "Spielfelder nach Wetter",
   "pitch.selectPlaceholder": "Spielfeld wählen...",

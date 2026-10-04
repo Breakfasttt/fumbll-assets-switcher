@@ -64,6 +64,7 @@ export default {
     "lucide-react": { scope: "renderer", reason: "icônes" },
     "@tanstack/react-query": { scope: "renderer", reason: "couche données : cache + invalidation des ressources IPC (shared/api), utilisée par toutes les features" },
     cmdk: { scope: "renderer", reason: "palette Ctrl+K (shared/components/CommandPalette) puis listes filtrables rosters/terrains (#21, #27)" },
+    "react-easy-crop": { scope: "renderer", reason: "recadrage (shared/components/CropDialog) : zoom centré pointeur, clavier, sans bords vides — mono-fonction légère (~7 kB)" },
     sonner: { scope: "renderer", reason: "toasts : succès/erreur/promesse/annuler (shared/lib/notify.ts), remplace alert()" },
     // --- Build / outillage
     vite: { scope: "build", reason: "bundler renderer" },

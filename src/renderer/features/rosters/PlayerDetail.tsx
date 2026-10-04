@@ -3,7 +3,7 @@ import { RosterInfo } from "@common/types";
 import { useTranslation } from "@/shared/i18n/LanguageContext";
 import { AssetPanel } from "@/features/asset-editor";
 import { PixelEditor, type AtlasInfo, type EditorTarget } from "@/features/iconset";
-import { CropEditor, type CropTarget } from "@/shared/components/CropEditor";
+import { CropDialog, type CropTarget } from "@/shared/components/CropDialog";
 
 type Position = RosterInfo["positions"][number];
 
@@ -12,7 +12,7 @@ type Position = RosterInfo["positions"][number];
 const PORTRAIT_WIDTH = 95;
 const PORTRAIT_HEIGHT = 147;
 
-type SidePanel = { kind: "pixel"; target: EditorTarget } | { kind: "crop"; target: CropTarget } | null;
+
 
 export function PlayerDetail({
   position,
@@ -24,37 +24,28 @@ export function PlayerDetail({
   cacheFolder: string;
 }) {
   const { t } = useTranslation();
-  const [sidePanel, setSidePanel] = useState<SidePanel>(null);
+  // Pixel editor: side panel next to the atlas grid. Crop: dialog (same as pitches).
+  const [pixelTarget, setPixelTarget] = useState<EditorTarget | null>(null);
+  const [cropTarget, setCropTarget] = useState<CropTarget | null>(null);
 
   const promptContext = { rosterName, positionName: position.name, positionType: position.type };
 
   const openEditor = (atlasInfo: AtlasInfo, url: string, row: number, col: number) => {
-    setSidePanel({ kind: "pixel", target: { atlasInfo, url, row, col } });
+    setPixelTarget({ atlasInfo, url, row, col });
   };
 
   const openCrop = (file: File, url: string) => {
-    setSidePanel({
-      kind: "crop",
-      target: {
-        imageSrc: URL.createObjectURL(file),
-        url,
-        targetWidth: PORTRAIT_WIDTH,
-        targetHeight: PORTRAIT_HEIGHT,
-      },
-    });
+    setCropTarget({ imageSrc: URL.createObjectURL(file), url, targetWidth: PORTRAIT_WIDTH, targetHeight: PORTRAIT_HEIGHT });
   };
 
   const openCropFromExisting = (imageSrc: string, url: string) => {
-    setSidePanel({
-      kind: "crop",
-      target: { imageSrc, url, targetWidth: PORTRAIT_WIDTH, targetHeight: PORTRAIT_HEIGHT },
-    });
+    setCropTarget({ imageSrc, url, targetWidth: PORTRAIT_WIDTH, targetHeight: PORTRAIT_HEIGHT });
   };
 
   return (
     <div>
       <h2 className="mb-3 text-[17px] font-semibold">{position.name}</h2>
-      <div className="grid grid-cols-2 items-start gap-4">
+      <div className={pixelTarget ? "grid grid-cols-2 items-start gap-4" : "flex flex-col gap-4"}>
         <div className="flex flex-col gap-4">
           <AssetPanel
             label={t("playerDetail.portraitLabel")}
@@ -75,15 +66,13 @@ export function PlayerDetail({
           />
         </div>
 
-        <div className="sticky top-0">
-          {sidePanel?.kind === "pixel" && (
-            <PixelEditor target={sidePanel.target} cacheFolder={cacheFolder} onDone={() => setSidePanel(null)} />
-          )}
-          {sidePanel?.kind === "crop" && (
-            <CropEditor target={sidePanel.target} cacheFolder={cacheFolder} onDone={() => setSidePanel(null)} />
-          )}
-        </div>
+        {pixelTarget && (
+          <div className="sticky top-0">
+            <PixelEditor target={pixelTarget} cacheFolder={cacheFolder} onDone={() => setPixelTarget(null)} />
+          </div>
+        )}
       </div>
+      <CropDialog target={cropTarget} cacheFolder={cacheFolder} onClose={() => setCropTarget(null)} />
     </div>
   );
 }

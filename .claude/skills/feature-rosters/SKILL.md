@@ -14,10 +14,10 @@ Feature **conteneur** : elle compose `asset-editor` et `iconset` (déclaré dans
 |---|---|
 | `src/renderer/features/rosters/RosterView.tsx` | Select du roster + case « rosters spéciaux » (hors `BB2025_ROSTER_IDS`), ligne résumé ; `useRosterList`, `useRoster(id)`, lance `useRosterUsageIndex` en tâche de fond |
 | `src/renderer/features/rosters/PlayerEditor.tsx` | grille liste des positions (gauche, 1ʳᵉ sélectionnée par défaut) + `PlayerDetail` |
-| `src/renderer/features/rosters/PlayerDetail.tsx` | 2 `AssetPanel` (portrait 95×147, iconset) + panneau latéral sticky : `PixelEditor` ou `CropEditor` (`SidePanel` state) |
+| `src/renderer/features/rosters/PlayerDetail.tsx` | 2 `AssetPanel` (portrait 95×147, iconset) + `CropDialog` (portrait) + panneau latéral sticky (seulement quand l'éditeur pixel est ouvert) : `PixelEditor` ou `CropDialog` (`SidePanel` state) |
 | `src/renderer/features/rosters/index.ts` | API publique : `RosterView` |
 
-Dépendances : `@/features/asset-editor` (`AssetPanel`), `@/features/iconset` (`PixelEditor`, `AtlasInfo`, `EditorTarget`), `shared/components/CropEditor`, `shared/api/queries`, `shared/lib/rosters` (`BB2025_ROSTER_IDS`).
+Dépendances : `@/features/asset-editor` (`AssetPanel`), `@/features/iconset` (`PixelEditor`, `AtlasInfo`, `EditorTarget`), `shared/components/CropDialog`, `shared/api/queries`, `shared/lib/rosters` (`BB2025_ROSTER_IDS`).
 
 ## Mémoire de navigation
 

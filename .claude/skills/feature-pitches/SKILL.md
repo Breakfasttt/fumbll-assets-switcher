@@ -12,11 +12,11 @@ URL d'asset (clé d'override) : `…/Pitches/<Slug>.zip?pitch=<weather>`.
 
 | Fichier | Rôle |
 |---|---|
-| `src/renderer/features/pitches/PitchView.tsx` | Select groupé (rosters BB2025 / spéciaux / système), 5 `PitchWeatherSlot` empilés (heat, sunny, nice, rain, blizzard) = titre météo + nom de fichier + `AssetSlotPair` partagé (vignettes 391×226), `CropEditor` dans un `Dialog` (782×452) |
+| `src/renderer/features/pitches/PitchView.tsx` | Select groupé (rosters BB2025 / spéciaux / système), 5 `PitchWeatherSlot` empilés (heat, sunny, nice, rain, blizzard) = titre météo + nom de fichier + `AssetSlotPair` partagé (vignettes 391×226), `CropDialog` dans un `Dialog` (782×452) |
 | `src/renderer/features/pitches/pitches.ts` | `PITCH_ROSTER_SLUGS`, `SPECIAL_PITCH_OPTIONS`, `SYSTEM_PITCH_OPTIONS`, `rosterPitchOptions`, `buildPitchZipUrl`, `buildPitchWeatherUrl` |
 | `src/renderer/features/pitches/index.ts` | API publique : `PitchView` |
 
-Dépendances partagées : `shared/components/CropEditor`, `AssetSlotPair`, `shared/hooks/useAssetSlot` (défaut, override, mutations, garde pack, undo), `shared/api` (`useRosterList` en cache : plus de refetch à chaque visite), `shared/lib/rosters` (`BB2025_ROSTER_IDS`).
+Dépendances partagées : `shared/components/CropDialog`, `AssetSlotPair`, `shared/hooks/useAssetSlot` (défaut, override, mutations, garde pack, undo), `shared/api` (`useRosterList` en cache : plus de refetch à chaque visite), `shared/lib/rosters` (`BB2025_ROSTER_IDS`).
 
 ## Comportement
 

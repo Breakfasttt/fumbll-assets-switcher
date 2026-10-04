@@ -43,7 +43,7 @@ src/renderer/        (alias : @/*)
   app/               shell : App.tsx (providers, sidebar, onglets)
   features/<nom>/    une feature = un dossier + index.ts (API publique) + un skill
   shared/ui/         primitives design system (purs : pas d'IPC, pas d'i18n)
-  shared/components/ composants transverses (ConfirmDialog, ImageZoom, CropEditor)
+  shared/components/ composants transverses (ConfirmDialog, ImageZoom, CropDialog)
   shared/hooks/      hooks transverses (garde pack actif, config, undo override, dimensions image)
   shared/api/        couche données react-query : queryClient + queryKeys, queries, mutations (invalidation)
   shared/lib/        utilitaires + données rosters partagées

@@ -6,8 +6,7 @@ import { useTranslation } from "@/shared/i18n/LanguageContext";
 import { useAssetSlot } from "@/shared/hooks/useAssetSlot";
 import { useRosterList } from "@/shared/api/queries";
 import { AssetSlotPair } from "@/shared/components/AssetSlotPair";
-import { CropEditor, type CropTarget } from "@/shared/components/CropEditor";
-import { Dialog, DialogContent } from "@/shared/ui/dialog";
+import { CropDialog, type CropTarget } from "@/shared/components/CropDialog";
 import {
   SPECIAL_PITCH_OPTIONS,
   SYSTEM_PITCH_OPTIONS,
@@ -96,13 +95,7 @@ export function PitchView({ cacheFolder }: { cacheFolder: string }) {
         <div className="text-sm text-muted-foreground">{t("pitch.noSelection")}</div>
       )}
 
-      <Dialog open={cropTarget !== null} onOpenChange={(open) => !open && setCropTarget(null)}>
-        <DialogContent className="w-auto">
-          {cropTarget && (
-            <CropEditor target={cropTarget} cacheFolder={cacheFolder} onDone={() => setCropTarget(null)} />
-          )}
-        </DialogContent>
-      </Dialog>
+      <CropDialog target={cropTarget} cacheFolder={cacheFolder} onClose={() => setCropTarget(null)} />
     </Card>
   );
 }
@@ -137,7 +130,7 @@ function PitchWeatherSlot({
         slot={slot}
         aspectRatio={PITCH_WIDTH / PITCH_HEIGHT}
         thumbHeight={THUMB_HEIGHT}
-        // Always cropped: CropEditor guards + clears the active pack itself at save time.
+        // Always cropped: CropDialog guards + clears the active pack itself at save time.
         onFile={(file) => onOpenCrop(URL.createObjectURL(file), url)}
         onRecrop={(imageSrc) => onOpenCrop(imageSrc, url)}
       />

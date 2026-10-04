@@ -28,7 +28,7 @@ Utilisé par : `asset-editor` (AtlasBreakdown sous les slots) et `rosters` (Pixe
 
 - « Répéter une variante » part de l'image **active** : le popover affiche la source (`imageSource`) et une confirmation est demandée si la source est le défaut alors qu'un override custom existe (lu via `useOverride(url)`, cache partagé avec le panel et tenu à jour par les mutations).
 - Libellés de colonnes en anglais en dur (`ATLAS_COLUMN_LABELS`) — non traduits.
-- `loadImage` / `canvasToPngBase64` dupliqués dans `shared/components/CropEditor.tsx` → à mutualiser dans `shared/lib`.
+- `loadImage` / `canvasToPngBase64` encore locaux (CropDialog a son propre `loadImage`) → à mutualiser dans `shared/lib` si un 3e usage apparaît.
 - Éditeur pixel minimal : pas d'undo/redo, pas de pipette, pas de couleur libre, pas de raccourcis, souris uniquement.
 - Couleurs de palette en hex : données légitimes (pas des tokens UI), `style={{background}}` non concerné par `no-hardcoded-color`.
 

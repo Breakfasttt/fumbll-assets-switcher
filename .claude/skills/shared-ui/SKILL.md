@@ -1,6 +1,6 @@
 ---
 name: shared-ui
-description: Zone transverse renderer de fumbbl-assets-switcher — shell de l'app (App.tsx, sidebar, onglets), design system (tokens Tailwind, primitives Radix façon shadcn dans shared/ui), composants partagés (ConfirmDialog, ImageZoom, CropEditor), hooks partagés (garde pack actif, config, dimensions), utilitaires, données rosters partagées et i18n (4 langues). Charger avant de toucher un de ces fichiers, d'ajouter un composant UI, une couleur, une clé de traduction ou de modifier la navigation.
+description: Zone transverse renderer de fumbbl-assets-switcher — shell de l'app (App.tsx, sidebar, onglets), design system (tokens Tailwind, primitives Radix façon shadcn dans shared/ui), composants partagés (ConfirmDialog, ImageZoom, CropDialog), hooks partagés (garde pack actif, config, dimensions), utilitaires, données rosters partagées et i18n (4 langues). Charger avant de toucher un de ces fichiers, d'ajouter un composant UI, une couleur, une clé de traduction ou de modifier la navigation.
 ---
 
 # Zone shared-ui (renderer transverse)
@@ -60,7 +60,7 @@ Manquants volontairement (docs/ux-research.md §5.4) : Tabs, ScrollArea, Context
 | `src/renderer/shared/components/ConfirmDialogProvider.tsx` | `ConfirmDialogProvider` + `useConfirm()` → `confirm(message | {title, description, confirmLabel, destructive}): Promise<boolean>` sur **AlertDialog**. Réservé aux actions irréversibles ; le réversible passe par `notify.undoable` |
 | `src/renderer/shared/components/ImageZoomModal.tsx` | `ImageZoomButton` (loupe en bas à droite d'une vignette) → Dialog pan/zoom (molette + range 0,5–8), Reset, « Afficher dans le dossier » (`RevealTarget` override/cacheFile). Racine `<span>` qui stoppe clic/keydown (héritage des slots cliquables, devenu inoffensif depuis #22) |
 | `src/renderer/shared/components/AssetSlotPair.tsx` | `AssetSlotPair({slot, aspectRatio, thumbHeight, defaultCaption?, onFile?, onRecrop?, sharedBy?, owner?})` : paire Défaut/Custom d'un asset (portrait, iconset, terrain). Image en jeu choisie par `ToggleGroup` (`aria-label`, Custom désactivé + tooltip sans override) ; vignettes **non cliquables** sur `bg-well`, liseré `border-live` + Badge « En jeu », `pixelated` seulement si agrandie, `Skeleton` au ratio, dimensions `tabular-nums`, loupe sur chaque vignette ; vignette custom = dropzone (drag-over pointillé primary + « Déposer pour remplacer ») + input file caché ; actions `IconButton` Remplacer / Recadrer (si `onRecrop`) / Supprimer sous la vignette custom, menu ⋯ (afficher dans le dossier, copier l'URL) à droite du ToggleGroup ; vignette custom vide = texte + bouton « Choisir un fichier… » dans la dropzone (icône masquée sous 120 px de haut) ; « Partagé par » tronqué + tooltip, avertissement `warning` si > 1 roster (`owner` exclu de la liste). `onFile` absent = `slot.saveFile`. Repères e2e : `data-testid="asset-slot-pair"`, `data-slot="default\|custom"`, `data-in-game`, `slot-toggle-*`, `slot-replace/recrop/delete/menu/choose-file`, `in-game-badge`, `slot-file-input`, `shared-by`, `shared-warning` |
-| `src/renderer/shared/components/CropEditor.tsx` | `CropEditor` + `CropTarget` : viewport 360 px au ratio cible, pan pointer, zoom molette/range, sauvegarde PNG `targetWidth×targetHeight` en override (garde pack actif). Utilisé par rosters (panneau) et pitches (dialog) |
+| `src/renderer/shared/components/CropDialog.tsx` | `CropDialog({target, cacheFolder, onClose})` + `CropTarget` (`target === null` = fermé) : **react-easy-crop** en Dialog (zoom molette centré pointeur, clavier, Slider), aperçus taille réelle ×1/×2 (×0,5 pour les terrains), `Ctrl+Entrée` enregistre ; sauvegarde PNG `targetWidth×targetHeight` en override (garde pack actif, toast Annuler si remplacement). Utilisé par rosters (portrait) et pitches |
 
 ### Hooks — `shared/hooks`
 | Fichier | Rôle |
@@ -120,7 +120,7 @@ Ajouter une clé : dans les **4** dictionnaires (règle `i18n-parity`), clé `zo
 ## Pièges connus
 
 - Plus de `div role=button` : slots d'asset = `AssetSlotPair` + ToggleGroup (#22), navigation = vrais boutons (#16).
-- Pan/zoom pointer dupliqué entre `CropEditor` et `ImageZoomModal` ; `loadImage`/`canvasToPngBase64` dupliqués avec `features/iconset`.
+- Pan/zoom pointer dupliqué entre `CropDialog` et `ImageZoomModal` ; `loadImage`/`canvasToPngBase64` dupliqués avec `features/iconset`.
 - `index.html` en `lang="fr"` fixe.
 
 ## Cible UX (validée)
