@@ -13,6 +13,11 @@ plus de confirmation à chaque modif ; toast warning + Annuler à la première m
 ## Conception
 Voir `docs/ux-research.md` (carte #29) et la section de la feature concernée.
 
+## Note (#14)
+`registerActiveOverride` archive la version perso remplacée par un pack, mais `activatePack` a déjà
+désactivé tous les overrides : la version archivée est **inactive**. « Annuler » une activation de pack
+(réactiver les persos, retirer le pack) reste à concevoir ici — `restoreOverride` seul ne suffit pas.
+
 ## Hors périmètre
 À préciser au passage en `2_a_implementer`.
 

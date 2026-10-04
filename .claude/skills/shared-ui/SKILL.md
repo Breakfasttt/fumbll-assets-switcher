@@ -11,9 +11,14 @@ description: Zone transverse renderer de fumbbl-assets-switcher — shell de l'a
 | Fichier | Rôle |
 |---|---|
 | `src/renderer/main.tsx` | `createRoot` + import `index.css` |
-| `src/renderer/index.css` | `@import "tailwindcss"` + **tokens** (`@theme`) + couche base de compatibilité v3 (couleur de bordure par défaut gray-200, curseur pointer des boutons, placeholder gray-400) + `body` (fond, couleur, police système 14 px) en dur |
+| `src/renderer/index.css` | `@import "tailwindcss"` + tokens, couche base : bordure par défaut `--border`, `body` 13 px police système, scrollbars fines, focus-visible global (`--ring`), curseur pointer des boutons, `prefers-reduced-motion`. **Aucune couleur littérale** |
 | `src/renderer/global.d.ts` | `window.fumbblApi: FumbblApi` (import type depuis `src/main/preload.ts`, exception déclarée) |
 | `src/renderer/app/App.tsx` | providers (`LanguageProvider`, `ConfirmDialogProvider`) + `AppShell` : sidebar 220 px, 5 onglets `div role=button`, statut cache + « Ouvrir le dossier », rendu de la vue active ; Config forcée si pas de cache |
+
+### Tokens — `shared/styles`
+| Fichier | Rôle |
+|---|---|
+| `src/renderer/shared/styles/tokens.css` | **seule source de couleurs** : variables HSL sémantiques sur `:root` (`--background`, `--surface`, `--surface-raised`, `--field`, `--well`, `--overlay`, `--foreground`, `--muted-foreground`, `--faint-foreground`, `--border`, `--border-strong`, `--ring`, `--primary(-hover/-foreground)`, `--live(-foreground)` = « utilisé en jeu », `--warning`, `--danger(-hover/-foreground)`), exposées en classes via `@theme inline` (`bg-surface`, `text-muted-foreground`…) ; polices `--font-sans` (Segoe UI Variable) / `--font-mono` ; rayons `--radius` 6 / `-lg` 8 / `-xl` 10 px |
 
 ### Design system — `shared/ui` (purs : ni IPC, ni i18n)
 | Fichier | Rôle |
@@ -25,7 +30,7 @@ description: Zone transverse renderer de fumbbl-assets-switcher — shell de l'a
 | `src/renderer/shared/ui/popover.tsx` | `Popover`, `PopoverTrigger`, `PopoverContent` Radix |
 | `src/renderer/shared/ui/select.tsx` | `Select` Radix (Trigger, Value, Content, Item, Group, Label) |
 
-Tokens : bloc `@theme` de `src/renderer/index.css`, variables `--color-*` (classes `app`, `sidebar`, `card`, `card-raised`, `input`, `well`, `border`/`border-strong`, `muted`, `faint`, `accent` (+hover, `accent-active` orange = slot actif), `success`, `danger`) ; `--radius` 6 px (classe `rounded`), `--radius-lg` 8 px. Thème sombre unique, valeurs hex.
+Thème sombre unique (un thème clair = redéfinir le bloc `:root` de `tokens.css`). Accent d'action unique `primary` (bleu) ; accent d'état unique `live` (vert, ex-orange `accent-active`) pour l'image utilisée en jeu.
 Manquants : Input, Tabs, Tooltip, Toast, Slider, Badge, ToggleGroup, ScrollArea.
 
 ### Composants partagés — `shared/components`
@@ -59,7 +64,8 @@ Ajouter une clé : dans les **4** dictionnaires (règle `i18n-parity`), clé `zo
 ## Règles
 
 - `shared/*` n'importe jamais une feature (`renderer-layers`).
-- Couleurs : uniquement via tokens (`no-hardcoded-color`).
+- Couleurs : uniquement via tokens. `check-arch` refuse les hex/`rgb()`/`hsl()` hors `tokens.css`, les couleurs de la palette Tailwind (`text-white`, `bg-gray-500`…) et toute classe de couleur vers un token inexistant (`unknown-color-token`, ex. `bg-card` → aucun style généré).
+- Images : sur fond uni `bg-well` (**pas de damier** : essayé en #12, refusé par l'utilisateur) ; chiffres (tailles, px, Ko) en `tabular-nums`.
 - Confirmation : `useConfirm`, jamais `window.confirm`/`alert` (`no-native-dialog`).
 - Nouvelle primitive UI : dans `shared/ui`, API façon shadcn (Radix + cva + `cn`), sans texte en dur.
 

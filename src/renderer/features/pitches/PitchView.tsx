@@ -99,7 +99,7 @@ export function PitchView({ cacheFolder }: { cacheFolder: string }) {
           ))}
         </div>
       ) : (
-        <div className="text-sm text-muted">{t("pitch.noSelection")}</div>
+        <div className="text-sm text-muted-foreground">{t("pitch.noSelection")}</div>
       )}
 
       <Dialog open={cropTarget !== null} onOpenChange={(open) => !open && setCropTarget(null)}>
@@ -191,12 +191,12 @@ function PitchWeatherSlot({
   return (
     <div className="flex flex-wrap items-center gap-4 rounded-lg border border-border-strong p-3">
       <div className="flex min-w-[140px] flex-col gap-1">
-        <div className="text-sm font-medium text-white">{t(`weather.${weather}`)}</div>
-        <div className="truncate text-xs text-faint" title={url}>
+        <div className="text-sm font-medium text-foreground">{t(`weather.${weather}`)}</div>
+        <div className="truncate text-xs text-faint-foreground" title={url}>
           {url.split("/").pop()}
         </div>
         {activeDims && (
-          <div className="text-xs text-faint">
+          <div className="text-xs tabular-nums text-faint-foreground">
             {activeDims.width}×{activeDims.height} px
           </div>
         )}
@@ -211,16 +211,16 @@ function PitchWeatherSlot({
             if (e.key === "Enter" || e.key === " ") override && setActive(false);
           }}
           className={cn(
-            "relative flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-border-strong bg-card p-2 hover:border-faint",
-            defaultActive && "border-accent bg-card-raised"
+            "relative flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-border-strong bg-surface p-2 hover:border-faint-foreground",
+            defaultActive && "border-primary bg-surface-raised"
           )}
           style={{ width: THUMB_WIDTH + 16 }}
         >
           {defaultActive && (
-            <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-accent-active shadow-[0_0_0_2px_var(--color-card)]" />
+            <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-live shadow-[0_0_0_2px_var(--color-surface)]" />
           )}
           {activeDataUrlOrDefault(defaultDataUrl, defaultError)}
-          <div className="text-xs text-faint">{t("assetPanel.slot.default")}</div>
+          <div className="text-xs text-faint-foreground">{t("assetPanel.slot.default")}</div>
         </div>
 
         <div
@@ -242,13 +242,13 @@ function PitchWeatherSlot({
             if (file) handleDrop(file);
           }}
           className={cn(
-            "relative flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed border-border-strong bg-card p-2",
-            (dragOver || customActive) && "border-accent bg-card-raised"
+            "relative flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed border-border-strong bg-surface p-2",
+            (dragOver || customActive) && "border-primary bg-surface-raised"
           )}
           style={{ width: THUMB_WIDTH + 16 }}
         >
           {customActive && (
-            <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-accent-active shadow-[0_0_0_2px_var(--color-card)]" />
+            <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-live shadow-[0_0_0_2px_var(--color-surface)]" />
           )}
           {override && (
             <button
@@ -256,7 +256,7 @@ function PitchWeatherSlot({
                 e.stopPropagation();
                 deleteOverride();
               }}
-              className="absolute right-1 top-1 z-10 rounded bg-danger px-1.5 py-0.5 text-xs hover:bg-danger-hover"
+              className="absolute right-1 top-1 z-10 rounded bg-danger px-1.5 py-0.5 text-xs text-danger-foreground hover:bg-danger-hover"
             >
               ✕
             </button>
@@ -272,20 +272,20 @@ function PitchWeatherSlot({
             </div>
           ) : (
             <div
-              className="flex items-center justify-center rounded bg-well text-center text-xs text-faint"
+              className="flex items-center justify-center rounded bg-well text-center text-xs text-faint-foreground"
               style={{ width: THUMB_WIDTH, height: THUMB_HEIGHT }}
             >
               {t("assetPanel.dropPlaceholder")}
             </div>
           )}
-          <div className="text-xs text-faint">{t("assetPanel.slot.custom")}</div>
+          <div className="text-xs text-faint-foreground">{t("assetPanel.slot.custom")}</div>
           {overrideDataUrl && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onOpenCrop(overrideDataUrl, url, refreshOverride);
               }}
-              className="rounded border border-border-strong px-2 py-0.5 text-xs text-muted hover:bg-card-raised hover:text-white"
+              className="rounded border border-border-strong px-2 py-0.5 text-xs text-muted-foreground hover:bg-surface-raised hover:text-foreground"
             >
               {t("assetPanel.recropButton")}
             </button>
@@ -310,7 +310,7 @@ function PitchWeatherSlot({
     }
     return (
       <div
-        className="flex items-center justify-center rounded bg-well text-center text-xs text-faint"
+        className="flex items-center justify-center rounded bg-well text-center text-xs text-faint-foreground"
         style={{ width: THUMB_WIDTH, height: THUMB_HEIGHT }}
       >
         {error ?? "..."}

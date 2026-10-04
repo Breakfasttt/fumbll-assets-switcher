@@ -30,12 +30,12 @@ export function PromptPopover({ buildPrompt }: { buildPrompt: () => string }) {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-96">
-        <div className="mb-2 text-xs text-muted">{t("assetPanel.promptHint")}</div>
+        <div className="mb-2 text-xs text-muted-foreground">{t("assetPanel.promptHint")}</div>
         <textarea
           readOnly
           value={prompt}
           rows={8}
-          className="w-full resize-none rounded border border-border-strong bg-input p-2 text-xs text-white focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent"
+          className="w-full resize-none rounded border border-border-strong bg-field p-2 text-xs text-foreground focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
         />
         <div className="mt-2 flex gap-2">
           <Button size="sm" onClick={copy}>

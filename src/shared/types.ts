@@ -49,6 +49,21 @@ export interface OverrideEntry {
   packId?: string;
 }
 
+/** Result of an override mutation that archived the previous version (see overrides:restore). */
+export interface OverrideSaveResult extends OverrideEntry {
+  /** Archived version to pass to restoreOverride to undo this mutation; absent when there was nothing to archive. */
+  undoVersionId?: string;
+}
+
+/** One archived version of an override, as listed by overrides:history (newest first). */
+export interface OverrideHistoryVersion {
+  versionId: string;
+  archivedAt: string;
+  fileName: string;
+  active: boolean;
+  packId?: string;
+}
+
 export interface PackManifestEntry {
   url: string;
   fileName: string;

@@ -68,7 +68,7 @@ export function ConfigView({
 
       <Card>
         <CardTitle>{t("config.title")}</CardTitle>
-        <div className={cacheFolder ? "text-success" : "text-danger"}>
+        <div className={cacheFolder ? "text-live" : "text-danger"}>
           {cacheFolder ? t("config.currentFolder", { folder: cacheFolder }) : t("config.noFolder")}
         </div>
         <div className="mt-3 flex gap-2">
@@ -81,7 +81,7 @@ export function ConfigView({
 
       <Card>
         <CardTitle>{t("config.setupTitle")}</CardTitle>
-        <ol className="list-decimal space-y-1.5 pl-5 text-sm text-muted">
+        <ol className="list-decimal space-y-1.5 pl-5 text-sm text-muted-foreground">
           <li>{t("config.setupStep1")}</li>
           <li>{t("config.setupStep2")}</li>
           <li>{t("config.setupStep3")}</li>

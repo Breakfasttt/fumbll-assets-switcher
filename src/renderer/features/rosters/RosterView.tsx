@@ -81,15 +81,15 @@ export function RosterView({ cacheFolder }: { cacheFolder: string }) {
               ))}
             </SelectContent>
           </Select>
-          <label className="flex items-center gap-2 text-sm text-muted">
+          <label className="flex items-center gap-2 text-sm text-muted-foreground">
             <Checkbox checked={showSpecial} onCheckedChange={(v) => setShowSpecial(v === true)} />
             {t("roster.specialCheckbox")}
           </label>
         </div>
-        {loadingRoster && <div className="mt-2 text-sm text-muted">{t("roster.loading")}</div>}
+        {loadingRoster && <div className="mt-2 text-sm text-muted-foreground">{t("roster.loading")}</div>}
         {error && <div className="mt-2 text-sm text-danger">{t("roster.errorPrefix", { error })}</div>}
         {roster && (
-          <div className="mt-2 text-sm text-muted">
+          <div className="mt-2 text-sm text-muted-foreground">
             {t("roster.summaryLine", {
               name: roster.name,
               baseIconPath: roster.baseIconPath,

@@ -104,7 +104,7 @@ export function AssetPanel({
     return (
       <Card>
         <CardTitle>{label}</CardTitle>
-        <div className="text-sm text-muted">{t("assetPanel.unavailable")}</div>
+        <div className="text-sm text-muted-foreground">{t("assetPanel.unavailable")}</div>
       </Card>
     );
   }
@@ -157,7 +157,7 @@ export function AssetPanel({
         <CardTitle className="mb-0">{label}</CardTitle>
         {promptContext && <PromptPopover buildPrompt={buildPrompt} />}
       </div>
-      <div className="mb-3 text-sm text-muted">
+      <div className="mb-3 text-sm text-muted-foreground">
         {usedBy && usedBy.size > 0
           ? t("assetPanel.usedByPrefix", { list: [...usedBy].sort().join(", ") })
           : usedBy === undefined
@@ -245,13 +245,13 @@ function AssetSlot({
         if (e.key === "Enter" || e.key === " ") onClick();
       }}
       className={cn(
-        "relative flex min-h-[160px] cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-border-strong bg-card p-3 hover:border-faint focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent",
-        active && "border-accent bg-card-raised"
+        "relative flex min-h-[160px] cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-border-strong bg-surface p-3 hover:border-faint-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+        active && "border-primary bg-surface-raised"
       )}
       style={{ width: thumbWidth + 24 }}
     >
       {active && (
-        <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-accent-active shadow-[0_0_0_2px_var(--color-card)]" />
+        <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-live shadow-[0_0_0_2px_var(--color-surface)]" />
       )}
       {imageSrc ? (
         <div className="relative">
@@ -264,16 +264,16 @@ function AssetSlot({
         </div>
       ) : (
         <div
-          className="flex items-center justify-center rounded bg-well text-center text-xs text-faint"
+          className="flex items-center justify-center rounded bg-well text-center text-xs text-faint-foreground"
           style={{ width: thumbWidth, height: SLOT_THUMB_HEIGHT }}
         >
           {error ?? "..."}
         </div>
       )}
-      <div className="text-xs text-muted">{title}</div>
-      <div className="text-xs text-faint">{subtitle}</div>
+      <div className="text-xs text-muted-foreground">{title}</div>
+      <div className="text-xs text-faint-foreground">{subtitle}</div>
       {dims && (
-        <div className="text-xs text-faint">
+        <div className="text-xs tabular-nums text-faint-foreground">
           {dims.width}×{dims.height} px
         </div>
       )}
@@ -331,14 +331,14 @@ function DropSlot({
         if (file) onDrop(file);
       }}
       className={cn(
-        "relative flex min-h-[160px] cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed border-border-strong bg-card p-3 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent",
-        (dragOver || active) && "border-accent bg-card-raised",
+        "relative flex min-h-[160px] cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed border-border-strong bg-surface p-3 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+        (dragOver || active) && "border-primary bg-surface-raised",
         !imageSrc && "border-dashed"
       )}
       style={{ width: thumbWidth + 24 }}
     >
       {active && (
-        <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-accent-active shadow-[0_0_0_2px_var(--color-card)]" />
+        <div className="absolute left-2 top-2 z-10 h-2.5 w-2.5 rounded-full bg-live shadow-[0_0_0_2px_var(--color-surface)]" />
       )}
       {onDelete && (
         <button
@@ -346,7 +346,7 @@ function DropSlot({
             e.stopPropagation();
             onDelete();
           }}
-          className="absolute right-1 top-1 z-10 rounded bg-danger px-1.5 py-0.5 text-xs hover:bg-danger-hover"
+          className="absolute right-1 top-1 z-10 rounded bg-danger px-1.5 py-0.5 text-xs text-danger-foreground hover:bg-danger-hover"
         >
           ✕
         </button>
@@ -362,15 +362,15 @@ function DropSlot({
         </div>
       ) : (
         <div
-          className="flex items-center justify-center rounded bg-well text-center text-xs text-faint"
+          className="flex items-center justify-center rounded bg-well text-center text-xs text-faint-foreground"
           style={{ width: thumbWidth, height: SLOT_THUMB_HEIGHT }}
         >
           {t("assetPanel.dropPlaceholder")}
         </div>
       )}
-      <div className="text-xs text-muted">{title}</div>
+      <div className="text-xs text-muted-foreground">{title}</div>
       {dims && (
-        <div className="text-xs text-faint">
+        <div className="text-xs tabular-nums text-faint-foreground">
           {dims.width}×{dims.height} px
         </div>
       )}
@@ -380,7 +380,7 @@ function DropSlot({
             e.stopPropagation();
             onRecrop();
           }}
-          className="rounded border border-border-strong px-2 py-0.5 text-xs text-muted hover:bg-card-raised hover:text-white"
+          className="rounded border border-border-strong px-2 py-0.5 text-xs text-muted-foreground hover:bg-surface-raised hover:text-foreground"
         >
           {t("assetPanel.recropButton")}
         </button>

@@ -112,7 +112,7 @@ export function CropEditor({ target, cacheFolder, onDone }: { target: CropTarget
   return (
     <Card>
       <CardTitle>{t("cropEditor.title")}</CardTitle>
-      <div className="mb-2 text-xs text-muted">
+      <div className="mb-2 text-xs text-muted-foreground">
         {t("cropEditor.sizeHint", { w: targetWidth, h: targetHeight })}
       </div>
 
@@ -136,7 +136,7 @@ export function CropEditor({ target, cacheFolder, onDone }: { target: CropTarget
       </div>
 
       <div className="mb-3 flex items-center gap-2">
-        <span className="text-xs text-muted">{t("cropEditor.zoomLabel")}</span>
+        <span className="text-xs text-muted-foreground">{t("cropEditor.zoomLabel")}</span>
         <input
           type="range"
           min={minZoom}

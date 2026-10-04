@@ -123,7 +123,7 @@ export function PixelEditor({
       <CardTitle>{t("pixelEditor.title")}</CardTitle>
 
       <div className="mb-3 flex items-center gap-2">
-        <span className="text-sm text-muted">{t("pixelEditor.cellLabel")}</span>
+        <span className="text-sm text-muted-foreground">{t("pixelEditor.cellLabel")}</span>
         <Select value={row} onValueChange={setRow}>
           <SelectTrigger className="w-28">
             <SelectValue />
@@ -172,7 +172,7 @@ export function PixelEditor({
             onClick={() => setColor(swatch)}
             className={cn(
               "h-6 w-6 rounded border-2 border-border-strong",
-              color === swatch && "border-accent"
+              color === swatch && "border-primary"
             )}
             style={{ background: swatch }}
           />

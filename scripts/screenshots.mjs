@@ -24,7 +24,9 @@ fs.mkdirSync(OUT, { recursive: true });
 const env = { ...process.env };
 delete env.ELECTRON_RUN_AS_NODE;
 const electronBin = (await import("electron")).default;
-const app = spawn(electronBin, [".", `--remote-debugging-port=${PORT}`], { cwd: ROOT, env, stdio: "ignore" });
+// Windows stops painting occluded/background windows: keep rendering for captures.
+const flags = ["--disable-features=CalculateNativeWinOcclusion", "--disable-renderer-backgrounding", "--disable-background-timer-throttling", "--disable-backgrounding-occluded-windows"];
+const app = spawn(electronBin, [".", `--remote-debugging-port=${PORT}`, ...flags], { cwd: ROOT, env, stdio: "ignore" });
 
 try {
   let target;
@@ -45,10 +47,15 @@ try {
     const msg = JSON.parse(e.data);
     pending.get(msg.id)?.(msg);
   });
+  // CDP can stall (e.g. hidden window not painting): fail loudly instead of hanging.
   const send = (method, params = {}) =>
-    new Promise((resolve) => {
+    new Promise((resolve, reject) => {
       const id = ++seq;
-      pending.set(id, resolve);
+      const timer = setTimeout(() => reject(new Error(`CDP ${method} : pas de réponse en 15 s`)), 15000);
+      pending.set(id, (msg) => {
+        clearTimeout(timer);
+        resolve(msg);
+      });
       ws.send(JSON.stringify({ id, method, params }));
     });
   const evaluate = async (expression) => (await send("Runtime.evaluate", { expression, returnByValue: true })).result?.result?.value;

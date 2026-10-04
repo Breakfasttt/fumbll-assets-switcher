@@ -76,7 +76,7 @@ export function ImageZoomButton({
       >
         <DialogTrigger asChild>
           <button
-            className="absolute bottom-1 right-1 z-10 rounded border border-border-strong bg-card/80 p-1 text-muted hover:bg-card hover:text-white"
+            className="absolute bottom-1 right-1 z-10 rounded border border-border-strong bg-surface/80 p-1 text-muted-foreground hover:bg-surface hover:text-foreground"
             title={t("zoom.openButton")}
           >
             <Search className="h-3.5 w-3.5" />
@@ -104,7 +104,7 @@ export function ImageZoomButton({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted">{t("zoom.zoomLabel")}</span>
+            <span className="text-xs text-muted-foreground">{t("zoom.zoomLabel")}</span>
             <input
               type="range"
               min={0.5}

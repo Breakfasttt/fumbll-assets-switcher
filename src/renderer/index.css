@@ -1,72 +1,57 @@
 @import "tailwindcss";
+@import "./shared/styles/tokens.css";
 
-@theme {
-  --color-app: #17171c;
-  --color-sidebar: #1a1a20;
-  --color-card: #23232b;
-  --color-card-raised: #2a2a33;
-  --color-input: #17171c;
-  --color-well: #111114;
-
-  --color-border: #34343e;
-  --color-border-strong: #454552;
-
-  --color-muted: #8b8b96;
-  --color-faint: #5c5c68;
-
-  --color-accent: #3d5afe;
-  --color-accent-hover: #5570ff;
-  --color-accent-active: #f5a623;
-
-  --color-success: #4ade80;
-
-  --color-danger: #f43f5e;
-  --color-danger-hover: #fb3f63;
-
-  --radius: 6px;
-  --radius-lg: 8px;
-}
-
-/*
-  The default border color has changed to `currentcolor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
 @layer base {
   *,
   ::after,
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
+    border-color: var(--border);
   }
 
-  /* Tailwind v4 dropped v3's pointer cursor on buttons and gray-400 placeholders: restored. */
+  html,
+  body {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  * {
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+
+  /* Single visible focus style; components with their own ring override it. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  /* Tailwind v4 dropped v3's pointer cursor on buttons and gray placeholders: restored. */
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
   input::placeholder,
   textarea::placeholder {
-    color: var(--color-gray-400);
+    color: var(--faint-foreground);
   }
-}
 
-html, body {
-  height: 100%;
-  margin: 0;
-}
-
-body {
-  background-color: #17171c;
-  color: #e8e8ec;
-  font-family: system-ui, sans-serif;
-  font-size: 14px;
-}
-
-* {
-  box-sizing: border-box;
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0ms !important;
+      transition-duration: 0ms !important;
+    }
+  }
 }

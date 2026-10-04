@@ -5,6 +5,8 @@ import {
   DivisionRosterSummary,
   DetectedCoach,
   OverrideEntry,
+  OverrideSaveResult,
+  OverrideHistoryVersion,
   OrphanCacheFile,
   PackSummary,
 } from "../shared/types";
@@ -33,22 +35,30 @@ const api = {
     url: string,
     base64Data: string,
     format: string
-  ): Promise<OverrideEntry> => ipcRenderer.invoke("overrides:save", folder, url, base64Data, format),
+  ): Promise<OverrideSaveResult> => ipcRenderer.invoke("overrides:save", folder, url, base64Data, format),
   setOverrideActive: (folder: string, url: string, active: boolean): Promise<void> =>
     ipcRenderer.invoke("overrides:setActive", folder, url, active),
-  deleteOverride: (folder: string, url: string): Promise<void> =>
+  /** Resolves to the archived version id (undo via restoreOverride), or null if nothing was deleted. */
+  deleteOverride: (folder: string, url: string): Promise<string | null> =>
     ipcRenderer.invoke("overrides:delete", folder, url),
   readOverrideImage: (url: string): Promise<string | null> =>
     ipcRenderer.invoke("overrides:readImage", url),
   listInactiveOverrides: (): Promise<OverrideEntry[]> => ipcRenderer.invoke("overrides:listInactive"),
   showOverrideInFolder: (url: string): Promise<void> => ipcRenderer.invoke("overrides:showInFolder", url),
+  restoreOverride: (folder: string, url: string, versionId: string): Promise<OverrideSaveResult> =>
+    ipcRenderer.invoke("overrides:restore", folder, url, versionId),
+  listOverrideHistory: (url: string): Promise<OverrideHistoryVersion[]> => ipcRenderer.invoke("overrides:history", url),
 
   listOrphanCacheFiles: (folder: string): Promise<OrphanCacheFile[]> =>
     ipcRenderer.invoke("cache:listOrphanFiles", folder),
   readOrphanCacheFile: (folder: string, fileName: string): Promise<string | null> =>
     ipcRenderer.invoke("cache:readOrphanFile", folder, fileName),
-  deleteOrphanCacheFile: (folder: string, fileName: string): Promise<void> =>
+  /** Moves the file to a 24 h trash; resolves to the trash id for restoreOrphanCacheFile. */
+  deleteOrphanCacheFile: (folder: string, fileName: string): Promise<string> =>
     ipcRenderer.invoke("cache:deleteOrphanFile", folder, fileName),
+  /** Resolves to false if a file with the same name reappeared in the cache meanwhile (trash item dropped). */
+  restoreOrphanCacheFile: (trashId: string): Promise<boolean> =>
+    ipcRenderer.invoke("cache:restoreOrphanFile", trashId),
 
   listPacks: (): Promise<PackSummary[]> => ipcRenderer.invoke("packs:list"),
   exportPack: (name: string, description: string | undefined, destZipPath: string): Promise<void> =>

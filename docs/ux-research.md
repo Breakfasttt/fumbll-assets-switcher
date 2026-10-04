@@ -4,6 +4,8 @@ Date : 2026-10-04. Périmètre lu : `src/renderer/app/App.tsx`, `features/*` (co
 
 **Statut : validé par l'utilisateur le 2026-10-04 (carte #10).** Les cartes de refonte sont en `kanban/2_a_implementer/` ; les numéros `#N` ci-dessous sont leurs ids.
 
+**Décisions utilisateur postérieures** : pas de damier de transparence derrière les images (fond uni `bg-well`) — toutes les mentions de damier ci-dessous sont caduques.
+
 Ce document est une **recommandation**, pas un catalogue d'options. Quand il y a un choix, il est tranché.
 
 ---
@@ -103,7 +105,7 @@ Convention shadcn (paires `x` / `x-foreground`, `border`, `input`, `ring`) ([sha
 }
 [data-theme="light"] { /* même liste, valeurs claires — non livré en v1, mais aucun hex en dur ne doit subsister */ }
 ```
-Règles : **zéro hex/arbitrary color dans les composants** (règle `no-hardcoded-color` de `check-arch.mjs`, déjà en place pour les `.tsx`). Les images transparentes sont toujours posées sur un **damier** (`--checker-*`) et non sur `bg-well` uni : c'est la convention de tous les éditeurs d'images et ça rend la transparence des sprites lisible.
+Règles : **zéro hex/arbitrary color dans les composants** (règle `no-hardcoded-color` de `check-arch.mjs`, déjà en place pour les `.tsx`). ~~Les images transparentes sont toujours posées sur un **damier**~~ — **décision utilisateur (2026-10-04, #12) : pas de damier**, les images restent sur le fond uni `bg-well`.
 
 ### 2.3 Typographie : police système, pas de webfont
 - `font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;` — l'app cible Windows (auto-détection), les autres OS retombent sur `system-ui`, Segoe UI Variable est sur toutes les Win11, hinting ClearType natif, 0 Ko, rendu identique aux dialogues natifs (sélection dossier/zip) qu'elle ouvre. Inter apporterait ~50–100 Ko de woff2 et un rendu moins net à 13 px sous Windows sans bénéfice produit. **@fontsource rejeté.**

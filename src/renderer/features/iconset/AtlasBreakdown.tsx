@@ -127,7 +127,7 @@ export function AtlasBreakdown({
 
   return (
     <div>
-      <div className="mb-2 text-xs text-muted">{t("atlas.cellsDetailLabel")}</div>
+      <div className="mb-2 text-xs text-muted-foreground">{t("atlas.cellsDetailLabel")}</div>
 
       <div className="mb-2 flex items-center gap-2">
         <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
@@ -141,8 +141,8 @@ export function AtlasBreakdown({
             </Button>
           </PopoverTrigger>
           <PopoverContent>
-            <div className="mb-2 text-xs text-muted">{t("atlas.repeatVariantHint")}</div>
-            <div className="mb-2 text-xs text-faint">
+            <div className="mb-2 text-xs text-muted-foreground">{t("atlas.repeatVariantHint")}</div>
+            <div className="mb-2 text-xs text-faint-foreground">
               {imageSource === "custom" ? t("atlas.sourceCustom") : t("atlas.sourceDefault")}
             </div>
             <Select value={chosenRow} onValueChange={setChosenRow}>
@@ -169,7 +169,7 @@ export function AtlasBreakdown({
         </Popover>
       </div>
 
-      <div className="text-xs text-muted mb-2">{t("atlas.clickCellHint")}</div>
+      <div className="text-xs text-muted-foreground mb-2">{t("atlas.clickCellHint")}</div>
 
       <div className="flex flex-col gap-2">
         {cellThumbs.map((rowThumbs, row) => (
@@ -180,10 +180,10 @@ export function AtlasBreakdown({
                   src={thumb}
                   title={t("atlas.cellTitle", { label: ATLAS_COLUMN_LABELS[col], n: row + 1 })}
                   onClick={() => onOpenEditor?.(atlasInfo, url, row, col, onSaved)}
-                  className="h-12 w-12 cursor-pointer rounded border border-border bg-well hover:border-accent"
+                  className="h-12 w-12 cursor-pointer rounded border border-border bg-well hover:border-primary"
                   style={{ imageRendering: "pixelated" }}
                 />
-                {row === 0 && <div className="w-12 text-center text-xs text-muted">{ATLAS_COLUMN_LABELS[col]}</div>}
+                {row === 0 && <div className="w-12 text-center text-xs text-muted-foreground">{ATLAS_COLUMN_LABELS[col]}</div>}
               </div>
             ))}
           </div>

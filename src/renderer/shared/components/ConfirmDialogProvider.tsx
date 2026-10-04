@@ -39,7 +39,7 @@ export function ConfirmDialogProvider({ children }: { children: React.ReactNode 
       {children}
       <Dialog open={message !== null} onOpenChange={(open) => !open && settle(false)}>
         <DialogContent className="max-w-md">
-          <div className="mb-4 text-sm text-white">{message}</div>
+          <div className="mb-4 text-sm text-foreground">{message}</div>
           <div className="flex justify-end gap-2">
             <Button size="sm" variant="outline" onClick={() => settle(false)}>
               {t("confirm.cancelButton")}

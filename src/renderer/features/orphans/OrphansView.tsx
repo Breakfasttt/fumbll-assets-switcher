@@ -60,11 +60,11 @@ export function OrphansView({ cacheFolder }: { cacheFolder: string }) {
     <div className="flex flex-col gap-4">
       <Card>
         <CardTitle>{t("orphans.inactiveTitle")}</CardTitle>
-        <div className="mb-3 text-sm text-muted">{t("orphans.inactiveHint")}</div>
+        <div className="mb-3 text-sm text-muted-foreground">{t("orphans.inactiveHint")}</div>
         {loading ? (
-          <div className="text-sm text-muted">{t("roster.loading")}</div>
+          <div className="text-sm text-muted-foreground">{t("roster.loading")}</div>
         ) : inactive.length === 0 ? (
-          <div className="text-sm text-muted">{t("orphans.none")}</div>
+          <div className="text-sm text-muted-foreground">{t("orphans.none")}</div>
         ) : (
           <div className="flex flex-wrap gap-3">
             {inactive.map((entry) => (
@@ -76,11 +76,11 @@ export function OrphansView({ cacheFolder }: { cacheFolder: string }) {
 
       <Card>
         <CardTitle>{t("orphans.filesTitle")}</CardTitle>
-        <div className="mb-3 text-sm text-muted">{t("orphans.filesHint")}</div>
+        <div className="mb-3 text-sm text-muted-foreground">{t("orphans.filesHint")}</div>
         {loading ? (
-          <div className="text-sm text-muted">{t("roster.loading")}</div>
+          <div className="text-sm text-muted-foreground">{t("roster.loading")}</div>
         ) : orphanFiles.length === 0 ? (
-          <div className="text-sm text-muted">{t("orphans.none")}</div>
+          <div className="text-sm text-muted-foreground">{t("orphans.none")}</div>
         ) : (
           <div className="flex flex-wrap gap-3">
             {orphanFiles.map((file) => (
@@ -110,7 +110,7 @@ function InactiveOverrideCard({ entry, onDelete }: { entry: OverrideEntry; onDel
   }, [entry.url]);
 
   return (
-    <div className="flex w-56 min-w-0 flex-col gap-2 rounded-lg border border-border-strong bg-card-raised p-3">
+    <div className="flex w-56 min-w-0 flex-col gap-2 rounded-lg border border-border-strong bg-surface-raised p-3">
       <div className="relative">
         {imageSrc && (
           <img
@@ -121,10 +121,10 @@ function InactiveOverrideCard({ entry, onDelete }: { entry: OverrideEntry; onDel
         )}
         {imageSrc && <ImageZoomButton imageSrc={imageSrc} reveal={{ kind: "override", ref: entry.url }} />}
       </div>
-      <div className="truncate text-xs text-muted" title={entry.url}>
+      <div className="truncate text-xs text-muted-foreground" title={entry.url}>
         {entry.url}
       </div>
-      <div className="truncate text-xs text-faint">
+      <div className="truncate text-xs text-faint-foreground">
         {rosters && rosters.size > 0
           ? t("orphans.rosterLabel", { rosters: [...rosters].sort().join(", ") })
           : rosters !== undefined
@@ -155,7 +155,7 @@ function OrphanFileCard({
   }, [cacheFolder, file.fileName]);
 
   return (
-    <div className="flex w-56 min-w-0 flex-col gap-2 rounded-lg border border-border-strong bg-card-raised p-3">
+    <div className="flex w-56 min-w-0 flex-col gap-2 rounded-lg border border-border-strong bg-surface-raised p-3">
       <div className="relative">
         {imageSrc && (
           <img
@@ -168,10 +168,10 @@ function OrphanFileCard({
           <ImageZoomButton imageSrc={imageSrc} reveal={{ kind: "cacheFile", cacheFolder, ref: file.fileName }} />
         )}
       </div>
-      <div className="truncate text-xs text-muted" title={file.fileName}>
+      <div className="truncate text-xs text-muted-foreground" title={file.fileName}>
         {file.fileName}
       </div>
-      <div className="text-xs text-faint">{formatSize(file.sizeBytes)}</div>
+      <div className="text-xs tabular-nums text-faint-foreground">{formatSize(file.sizeBytes)}</div>
       <Button size="sm" variant="destructive" onClick={onDelete}>
         {t("orphans.deleteButton")}
       </Button>

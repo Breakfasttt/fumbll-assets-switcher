@@ -1,0 +1,79 @@
+/*
+ * Design tokens: the ONLY place where raw colors live (check-arch rule
+ * no-hardcoded-color). Semantic names follow the shadcn convention
+ * (x / x-foreground). Values are complete HSL colors so a light theme only
+ * has to redefine this block (see docs/ux-research.md §2.2).
+ */
+:root,
+[data-theme="dark"] {
+  /* Surfaces, from deepest to highest. */
+  --background: hsl(240 9% 10%);
+  --sidebar: hsl(240 9% 11.5%);
+  --surface: hsl(240 9% 15%);
+  --surface-raised: hsl(240 9% 18%);
+  --field: hsl(240 9% 10%);
+  --well: hsl(240 8% 7%);
+  --overlay: hsl(240 10% 4% / 0.7);
+
+  --foreground: hsl(240 10% 92%);
+  --muted-foreground: hsl(240 5% 57%);
+  --faint-foreground: hsl(240 5% 40%);
+
+  --border: hsl(240 8% 23%);
+  --border-strong: hsl(240 8% 30%);
+  --ring: hsl(230 100% 70%);
+
+  /* Single action accent. */
+  --primary: hsl(231 99% 62%);
+  --primary-hover: hsl(231 100% 67%);
+  --primary-foreground: hsl(0 0% 100%);
+
+  /* Single state accent: "used in game". */
+  --live: hsl(142 69% 58%);
+  --live-foreground: hsl(142 80% 10%);
+  --warning: hsl(38 91% 55%);
+  --danger: hsl(350 89% 60%);
+  --danger-hover: hsl(350 95% 64%);
+  --danger-foreground: hsl(0 0% 100%);
+
+  --shadow-overlay: 0 8px 24px hsl(240 10% 2% / 0.5);
+
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-sidebar: var(--sidebar);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-field: var(--field);
+  --color-well: var(--well);
+  --color-overlay: var(--overlay);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-faint-foreground: var(--faint-foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-live: var(--live);
+  --color-live-foreground: var(--live-foreground);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-foreground: var(--danger-foreground);
+
+  --shadow-overlay: var(--shadow-overlay);
+}
+
+@theme {
+  /* Windows-first system font: no webfont (docs/ux-research.md §2.3). */
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Cascadia Mono", Consolas, ui-monospace, monospace;
+
+  --radius: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+}

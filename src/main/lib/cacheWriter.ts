@@ -1,4 +1,5 @@
-import { createHash } from "crypto";
+import { app } from "electron";
+import { createHash, randomBytes } from "crypto";
 import { promises as fs } from "fs";
 import * as path from "path";
 import { OrphanCacheFile } from "../../shared/types";
@@ -142,8 +143,97 @@ export async function readCacheFileDataUrl(cacheFolder: string, fileName: string
   }
 }
 
-export async function deleteOrphanCacheFile(cacheFolder: string, fileName: string): Promise<void> {
-  await fs.unlink(path.join(cacheFolder, fileName));
+// Orphan files "deleted" from the cache are moved to a short-lived trash so the
+// deletion can be undone: `userData/trash/cache/<trashId>/{meta.json, <fileName>}`.
+// Items older than TRASH_MAX_AGE_MS are purged on app startup (purgeCacheTrash).
+const TRASH_META_FILE = "meta.json";
+const TRASH_ID_RE = /^\d+-[0-9a-f]{8}$/;
+const TRASH_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+interface TrashMeta {
+  cacheFolder: string;
+  fileName: string;
+  trashedAt: string;
+}
+
+function cacheTrashDir(): string {
+  return path.join(app.getPath("userData"), "trash", "cache");
+}
+
+/** rename() fails across drives (cache folder and userData often are); fall back to copy + unlink. */
+async function moveFile(from: string, to: string): Promise<void> {
+  try {
+    await fs.rename(from, to);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== "EXDEV") throw err;
+    await fs.copyFile(from, to);
+    await fs.unlink(from);
+  }
+}
+
+/** Moves an orphan cache file to the trash and returns its trash id (see restoreOrphanCacheFile). */
+export async function deleteOrphanCacheFile(cacheFolder: string, fileName: string): Promise<string> {
+  const trashId = `${Date.now()}-${randomBytes(4).toString("hex")}`;
+  const dir = path.join(cacheTrashDir(), trashId);
+  await fs.mkdir(dir, { recursive: true });
+  const fileBaseName = path.basename(fileName);
+  await moveFile(path.join(cacheFolder, fileName), path.join(dir, fileBaseName));
+  const meta: TrashMeta = { cacheFolder, fileName, trashedAt: new Date().toISOString() };
+  await fs.writeFile(path.join(dir, TRASH_META_FILE), JSON.stringify(meta, null, 2), "utf8");
+  return trashId;
+}
+
+/**
+ * Puts a trashed orphan file back in its original cache folder. Returns false
+ * (and drops the trash item) if a file with the same name has appeared there
+ * since, e.g. re-downloaded by the client - never overwrite a live cache file.
+ */
+export async function restoreOrphanCacheFile(trashId: string): Promise<boolean> {
+  if (!TRASH_ID_RE.test(trashId)) {
+    throw new Error(`Invalid trash id: ${trashId}`);
+  }
+  const dir = path.join(cacheTrashDir(), trashId);
+  const meta = JSON.parse(await fs.readFile(path.join(dir, TRASH_META_FILE), "utf8")) as TrashMeta;
+  const dest = path.join(meta.cacheFolder, meta.fileName);
+
+  let restored = false;
+  try {
+    await fs.access(dest);
+  } catch {
+    await moveFile(path.join(dir, path.basename(meta.fileName)), dest);
+    restored = true;
+  }
+  await fs.rm(dir, { recursive: true, force: true });
+  return restored;
+}
+
+/** Permanently deletes trashed cache files older than `maxAgeMs` (called once at startup). */
+export async function purgeCacheTrash(maxAgeMs: number = TRASH_MAX_AGE_MS): Promise<void> {
+  let ids: string[];
+  try {
+    ids = await fs.readdir(cacheTrashDir());
+  } catch {
+    return;
+  }
+  const now = Date.now();
+  for (const trashId of ids) {
+    const dir = path.join(cacheTrashDir(), trashId);
+    let trashedAt: number;
+    try {
+      const meta = JSON.parse(await fs.readFile(path.join(dir, TRASH_META_FILE), "utf8")) as TrashMeta;
+      trashedAt = Date.parse(meta.trashedAt);
+    } catch {
+      // no readable metadata (interrupted move): age it from the folder itself
+      try {
+        trashedAt = (await fs.stat(dir)).mtimeMs;
+      } catch {
+        continue;
+      }
+    }
+    if (Number.isNaN(trashedAt) || now - trashedAt > maxAgeMs) {
+      await fs.rm(dir, { recursive: true, force: true });
+    }
+  }
 }
 
 const MIME_BY_EXT: Record<string, string> = {

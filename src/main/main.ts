@@ -8,6 +8,8 @@ import {
   listOrphanCacheFiles,
   readCacheFileDataUrl,
   deleteOrphanCacheFile,
+  restoreOrphanCacheFile,
+  purgeCacheTrash,
   putImageInCache,
 } from "./lib/cacheWriter";
 import {
@@ -19,7 +21,9 @@ import {
   deleteOverride,
   readOverrideImageDataUrl,
   showOverrideInFolder,
+  restoreOverride,
 } from "./lib/overrides";
+import { listOverrideHistory } from "./lib/overrideHistory";
 import { fetchRoster, fetchDivisionRosters, fetchAssetImageDataUrl, fetchAssetImageBuffer } from "./lib/fumbblApi";
 import { listPacks, exportPack, importPack, activatePack, deletePack, clearActivePack } from "./lib/packs";
 
@@ -47,6 +51,8 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  // Undo window of trashed orphan cache files is 24 h: drop older items.
+  purgeCacheTrash().catch((err) => console.error("purgeCacheTrash failed:", err));
   createWindow();
 
   app.on("activate", () => {
@@ -108,10 +114,16 @@ ipcMain.handle("overrides:delete", (_e, folder: string, url: string) => deleteOv
 ipcMain.handle("overrides:readImage", (_e, url: string) => readOverrideImageDataUrl(url));
 ipcMain.handle("overrides:listInactive", () => listInactiveOverrides());
 ipcMain.handle("overrides:showInFolder", (_e, url: string) => showOverrideInFolder(url));
+ipcMain.handle(
+  "overrides:restore",
+  (_e, folder: string, url: string, versionId: string) => restoreOverride(folder, url, versionId)
+);
+ipcMain.handle("overrides:history", (_e, url: string) => listOverrideHistory(url));
 
 ipcMain.handle("cache:listOrphanFiles", (_e, folder: string) => listOrphanCacheFiles(folder));
 ipcMain.handle("cache:readOrphanFile", (_e, folder: string, fileName: string) => readCacheFileDataUrl(folder, fileName));
 ipcMain.handle("cache:deleteOrphanFile", (_e, folder: string, fileName: string) => deleteOrphanCacheFile(folder, fileName));
+ipcMain.handle("cache:restoreOrphanFile", (_e, trashId: string) => restoreOrphanCacheFile(trashId));
 
 ipcMain.handle("packs:list", () => listPacks());
 ipcMain.handle(

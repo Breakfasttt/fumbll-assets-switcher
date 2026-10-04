@@ -237,10 +237,37 @@ for (const file of SOURCES.filter((f) => config.ipcForbiddenIn.some((d) => start
 
 // ---------------------------------------------------------------- règles UI
 
+// Tokens de couleur : déclarés uniquement dans ce fichier (--color-<nom>), seule source de couleurs brutes.
+const TOKENS_FILE = "src/renderer/shared/styles/tokens.css";
+const colorTokens = new Set(exists(TOKENS_FILE) ? [...read(TOKENS_FILE).matchAll(/--color-([a-z0-9-]+)\s*:/g)].map((m) => m[1]) : []);
+const TW_PALETTE = "white|black|slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose";
+// Suffixes non-couleur des préfixes surveillés (tailles, styles, positions…).
+const NON_COLOR = new Set(("transparent current inherit none xs sm base lg xl 2xl 3xl 4xl 5xl 6xl 7xl 8xl 9xl left center right justify start end " +
+  "wrap nowrap balance pretty ellipsis clip solid dashed dotted double hidden collapse separate x y t b l r s e inset fixed local scroll " +
+  "no-repeat repeat repeat-x repeat-y cover contain auto top bottom offset").split(" "));
+const COLOR_CLASS_RE = /(?:^|[\s"'`:])(?:text|bg|border|ring|fill|stroke|from|to|via|outline|divide|placeholder|decoration|accent|caret)(?:-[xytblrse])?-([a-z][a-z0-9-]*?)(?:\/\d+)?(?=$|[\s"'`])/gm;
+
 for (const file of SOURCES.filter((f) => processOf(f) === "renderer" && f.endsWith(".tsx"))) {
   const text = stripComments(sourceText[file]);
   for (const m of text.matchAll(/(?:\b(?:text|bg|border|ring|fill|stroke|from|to|via|shadow|outline)-\[#[0-9a-fA-F]{3,8}\]|(?:color|background|backgroundColor|borderColor)\s*:\s*["']#[0-9a-fA-F]{3,8}["'])/g)) {
-    report("no-hardcoded-color", "error", file, lineOf(text, m.index), `couleur en dur "${m[0]}" — utiliser un token (@theme de index.css)`);
+    report("no-hardcoded-color", "error", file, lineOf(text, m.index), `couleur en dur "${m[0]}" — utiliser un token (${TOKENS_FILE})`);
+  }
+  for (const m of text.matchAll(new RegExp(`(?:^|[\\s"'\`:])(?:text|bg|border|ring|fill|stroke|from|to|via|outline)-(?:${TW_PALETTE})(?:-\\d+)?(?:/\\d+)?(?=$|[\\s"'\`])`, "gm"))) {
+    report("no-hardcoded-color", "error", file, lineOf(text, m.index), `couleur de la palette Tailwind "${m[0].trim().replace(/^["'`:]/, "")}" — utiliser un token (${TOKENS_FILE})`);
+  }
+  // Classe de couleur vers un token inexistant : Tailwind ne génère rien, sans erreur.
+  for (const m of text.matchAll(COLOR_CLASS_RE)) {
+    const name = m[1];
+    if (colorTokens.has(name) || NON_COLOR.has(name) || /^\d/.test(name) || new RegExp(`^(?:${TW_PALETTE})(?:-\\d+)?$`).test(name)) continue;
+    if (/^(?:opacity|offset|gradient|clip|origin|size|blend|linear|radial|conic|position|style|width|x|y)-/.test(name)) continue;
+    report("unknown-color-token", "error", file, lineOf(text, m.index), `"${m[0].trim().replace(/^["'`:]/, "")}" : token de couleur "${name}" inconnu (${TOKENS_FILE})`);
+  }
+}
+// CSS : aucune couleur littérale hors du fichier de tokens.
+for (const file of walk("src/renderer", (f) => f.endsWith(".css") && f !== TOKENS_FILE)) {
+  const text = stripComments(read(file));
+  for (const m of text.matchAll(/#[0-9a-fA-F]{3,8}\b|\b(?:rgb|rgba|hsl|hsla|oklch)\(/g)) {
+    report("no-hardcoded-color", "error", file, lineOf(text, m.index), `couleur littérale "${m[0]}" hors de ${TOKENS_FILE}`);
   }
 }
 for (const file of SOURCES.filter((f) => processOf(f) === "renderer")) {

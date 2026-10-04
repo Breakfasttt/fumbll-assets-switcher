@@ -18,7 +18,7 @@ Voir `docs/ux-research.md` (carte #22) et la section de la feature concernée.
 
 ## Checklist
 - [ ] Extraire `useAssetSlot(url)` (queries/mutations) ; supprimer duplication `PitchWeatherSlot`
-- [ ] Vignettes non cliquables, damier, skeleton au ratio, label "En jeu"
+- [ ] Vignettes non cliquables, fond uni bg-well (pas de damier), skeleton au ratio, label "En jeu"
 - [ ] Dropzone + "Choisir un fichier…", remplacement avec Undo
 - [ ] Barre d'actions IconButton + menu ⋯ ; avertissement "partagé par N rosters"
 - [ ] skill(s) concerné(s) mis à jour

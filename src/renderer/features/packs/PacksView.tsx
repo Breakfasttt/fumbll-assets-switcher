@@ -63,14 +63,14 @@ export function PacksView({ cacheFolder }: { cacheFolder: string }) {
     <div className="flex flex-col gap-4">
       <Card>
         <CardTitle>{t("packs.title")}</CardTitle>
-        <div className="mb-3 text-sm text-muted">{t("packs.hint")}</div>
+        <div className="mb-3 text-sm text-muted-foreground">{t("packs.hint")}</div>
         <div className="flex flex-wrap items-center gap-2">
           <input
             type="text"
             value={exportName}
             onChange={(e) => setExportName(e.target.value)}
             placeholder={t("packs.nameInputPlaceholder")}
-            className="w-56 rounded border border-border-strong bg-input px-3 py-2 text-sm focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent"
+            className="w-56 rounded border border-border-strong bg-field px-3 py-2 text-sm focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           />
           <Button size="sm" onClick={handleExport} disabled={!exportName.trim()}>
             {t("packs.exportButton")}
@@ -84,9 +84,9 @@ export function PacksView({ cacheFolder }: { cacheFolder: string }) {
       <Card>
         <CardTitle>{t("packs.listTitle")}</CardTitle>
         {loading ? (
-          <div className="text-sm text-muted">{t("roster.loading")}</div>
+          <div className="text-sm text-muted-foreground">{t("roster.loading")}</div>
         ) : packs.length === 0 ? (
-          <div className="text-sm text-muted">{t("packs.none")}</div>
+          <div className="text-sm text-muted-foreground">{t("packs.none")}</div>
         ) : (
           <div className="flex flex-wrap gap-3">
             {packs.map((pack) => (
@@ -116,15 +116,15 @@ function PackCard({
   const { t } = useTranslation();
 
   return (
-    <div className="flex w-56 min-w-0 flex-col gap-2 rounded-lg border border-border-strong bg-card-raised p-3">
-      <div className="truncate text-sm font-medium text-white" title={pack.name}>
+    <div className="flex w-56 min-w-0 flex-col gap-2 rounded-lg border border-border-strong bg-surface-raised p-3">
+      <div className="truncate text-sm font-medium text-foreground" title={pack.name}>
         {pack.name}
       </div>
-      <div className="text-xs text-faint">{t("packs.entryCount", { count: pack.entryCount })}</div>
-      <div className="text-xs text-faint">
+      <div className="text-xs tabular-nums text-faint-foreground">{t("packs.entryCount", { count: pack.entryCount })}</div>
+      <div className="text-xs text-faint-foreground">
         {t("packs.importedAt", { date: new Date(pack.importedAt).toLocaleDateString() })}
       </div>
-      {pack.active && <div className="text-xs font-medium text-accent">{t("packs.activeLabel")}</div>}
+      {pack.active && <div className="text-xs font-medium text-primary">{t("packs.activeLabel")}</div>}
       <div className="mt-1 flex gap-2">
         {!pack.active && (
           <Button size="sm" onClick={onActivate}>

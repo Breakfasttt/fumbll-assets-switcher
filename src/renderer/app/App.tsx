@@ -51,8 +51,8 @@ function AppShell() {
                 if (e.key === "Enter" || e.key === " ") setActiveTab(tab.id);
               }}
               className={cn(
-                "cursor-pointer rounded px-3 py-2 text-sm font-medium text-muted border border-transparent hover:bg-card hover:text-white",
-                effectiveTab === tab.id && "bg-card-raised border-border-strong text-white"
+                "cursor-pointer rounded px-3 py-2 text-sm font-medium text-muted-foreground border border-transparent hover:bg-surface hover:text-foreground",
+                effectiveTab === tab.id && "bg-surface-raised border-border-strong text-foreground"
               )}
             >
               {tab.label}
@@ -60,13 +60,13 @@ function AppShell() {
           ))}
         </nav>
         <div className="mt-auto flex flex-col gap-2 px-2">
-          <div className="text-xs leading-relaxed text-faint">
+          <div className="text-xs leading-relaxed text-faint-foreground">
             {cacheFolder ? t("app.cacheStatus", { folder: cacheFolder }) : t("app.cacheNotConfigured")}
           </div>
           {cacheFolder && (
             <button
               onClick={() => window.fumbblApi.openCacheFolder(cacheFolder)}
-              className="rounded border border-border-strong px-2 py-1.5 text-xs text-muted hover:bg-card hover:text-white"
+              className="rounded border border-border-strong px-2 py-1.5 text-xs text-muted-foreground hover:bg-surface hover:text-foreground"
             >
               {t("app.openFolderButton")}
             </button>
