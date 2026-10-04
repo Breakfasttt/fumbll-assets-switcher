@@ -8,7 +8,11 @@
     "build": "tsc -p tsconfig.main.json && vite build",
     "dev": "concurrently -k -n MAIN,VITE,ELECTRON -c blue,green,magenta \"tsc -p tsconfig.main.json -w\" \"vite\" \"wait-on tcp:5173 dist/main/main/main.js && electron .\"",
     "start": "electron .",
-    "typecheck": "tsc -p tsconfig.main.json --noEmit && tsc -p tsconfig.renderer.json --noEmit"
+    "typecheck": "tsc -p tsconfig.main.json --noEmit && tsc -p tsconfig.renderer.json --noEmit",
+    "check-arch": "node scripts/check-arch.mjs",
+    "kanban": "node scripts/kanban.mjs",
+    "verify": "npm run typecheck && npm run check-arch",
+    "check-identity": "node scripts/check-git-identity.mjs --push"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

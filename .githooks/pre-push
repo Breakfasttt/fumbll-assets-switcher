@@ -1,0 +1,4 @@
+#!/bin/sh
+# Activation : git config core.hooksPath .githooks
+# Projet perso : refuse un push avec le compte pro (identité de commit + compte GitHub actif dans gh).
+node scripts/check-git-identity.mjs --push || exit 1
