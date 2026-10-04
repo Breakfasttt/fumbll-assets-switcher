@@ -19,6 +19,7 @@ dans la foulée.
 Refonte de la palette.
 
 ## Checklist
-- [ ] 3 occurrences remplacées
-- [ ] entrées baseline retirées
-- [ ] `npm run verify` OK
+- [x] 3 occurrences remplacées par `text-success` / `text-danger` (mêmes valeurs hex, aucun changement visuel)
+- [x] entrées baseline retirées
+- [x] skills feature-config / feature-rosters à jour
+- [x] `npm run verify` OK

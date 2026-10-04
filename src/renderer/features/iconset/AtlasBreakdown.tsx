@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/shared/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/shared/ui/popover";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/shared/ui/select";
 import { useTranslation } from "@/shared/i18n/LanguageContext";
 import { useActivePackGuard } from "@/shared/hooks/useActivePackGuard";
+import { useConfirm } from "@/shared/components/ConfirmDialogProvider";
 import type { AtlasInfo } from "./PixelEditor";
 
 export const ATLAS_COLUMN_LABELS = ["Home idle", "Home moving", "Away idle", "Away moving"];
@@ -42,12 +43,15 @@ export function canvasToPngBase64(canvas: HTMLCanvasElement): string {
 // away-idle, away-moving) times N rows (one per pose/index). Cell size = width / 4.
 export function AtlasBreakdown({
   imgSrc,
+  imageSource,
   url,
   cacheFolder,
   onSaved,
   onOpenEditor,
 }: {
   imgSrc: string;
+  /** Which slot `imgSrc` comes from: the operations below start from it. */
+  imageSource: "default" | "custom";
   url: string;
   cacheFolder: string;
   onSaved: () => void;
@@ -55,6 +59,7 @@ export function AtlasBreakdown({
 }) {
   const { t } = useTranslation();
   const guardAgainstActivePack = useActivePackGuard();
+  const confirm = useConfirm();
   const [atlasInfo, setAtlasInfo] = useState<AtlasInfo | null>(null);
   const [cellThumbs, setCellThumbs] = useState<string[][]>([]);
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -91,6 +96,12 @@ export function AtlasBreakdown({
   if (!atlasInfo) return null;
 
   const applyUniformRow = async () => {
+    // Starting from the default image would silently replace an existing custom
+    // one. Read the override from the main process at click time: it is the
+    // source of truth, a parent's state may be stale.
+    if (imageSource === "default" && (await window.fumbblApi.getOverride(url))) {
+      if (!(await confirm(t("atlas.overwriteCustomConfirm")))) return;
+    }
     if (!(await guardAgainstActivePack())) return;
     const { canvas: sourceCanvas, cellSize, rows } = atlasInfo;
     const row = Number(chosenRow);
@@ -131,6 +142,9 @@ export function AtlasBreakdown({
           </PopoverTrigger>
           <PopoverContent>
             <div className="mb-2 text-xs text-muted">{t("atlas.repeatVariantHint")}</div>
+            <div className="mb-2 text-xs text-faint">
+              {imageSource === "custom" ? t("atlas.sourceCustom") : t("atlas.sourceDefault")}
+            </div>
             <Select value={chosenRow} onValueChange={setChosenRow}>
               <SelectTrigger>
                 <SelectValue />

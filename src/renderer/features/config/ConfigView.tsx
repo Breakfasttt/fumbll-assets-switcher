@@ -68,7 +68,7 @@ export function ConfigView({
 
       <Card>
         <CardTitle>{t("config.title")}</CardTitle>
-        <div className={cacheFolder ? "text-[#4ade80]" : "text-[#f43f5e]"}>
+        <div className={cacheFolder ? "text-success" : "text-danger"}>
           {cacheFolder ? t("config.currentFolder", { folder: cacheFolder }) : t("config.noFolder")}
         </div>
         <div className="mt-3 flex gap-2">

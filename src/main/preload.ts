@@ -22,8 +22,6 @@ const api = {
 
   validateCacheFolder: (folder: string): Promise<boolean> =>
     ipcRenderer.invoke("cache:validateFolder", folder),
-  listCacheEntries: (folder: string): Promise<Record<string, string>> =>
-    ipcRenderer.invoke("cache:listEntries", folder),
   openCacheFolder: (folder: string): Promise<string> => ipcRenderer.invoke("cache:openFolder", folder),
   showFileInFolder: (folder: string, fileName: string): Promise<void> =>
     ipcRenderer.invoke("shell:showFileInFolder", folder, fileName),
@@ -66,7 +64,6 @@ const api = {
     ipcRenderer.invoke("fumbbl:fetchDivisionRosters", divisionId),
   fetchAssetImage: (folder: string | null, url: string): Promise<string | null> =>
     ipcRenderer.invoke("fumbbl:fetchAssetImage", folder, url),
-  weatherCodes: (): Promise<string[]> => ipcRenderer.invoke("fumbbl:weatherCodes"),
 };
 
 export type FumbblApi = typeof api;

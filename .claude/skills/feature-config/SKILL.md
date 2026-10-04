@@ -29,7 +29,7 @@ Dépendances partagées : `shared/i18n/LanguageContext` (`language`, `setLanguag
 
 ## Pièges connus
 
-- `alert()` natifs (baseline `no-native-dialog`, carte 8) ; couleurs `text-[#4ade80]`/`text-[#f43f5e]` (baseline `no-hardcoded-color`, carte 9).
+- `alert()` natifs (baseline `no-native-dialog`, carte 8).
 - Config relue/réécrite entièrement côté renderer à 3 endroits (ici ×2, LanguageContext) : risque d'écrasement concurrent. `coachName` n'est relu nulle part.
 - Plusieurs coachs détectés : le premier gagne sans choix utilisateur.
 - Auto-détection Windows uniquement.

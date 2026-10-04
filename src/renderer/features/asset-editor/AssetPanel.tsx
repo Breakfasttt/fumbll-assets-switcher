@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardTitle } from "@/shared/ui/card";
-import { Button } from "@/shared/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { extractAssetId, getRostersUsingAsset, getRosterUsageIndexReady } from "@/shared/lib/rosters";
 import { useImageDimensions } from "@/shared/hooks/useImageDimensions";
@@ -203,6 +202,7 @@ export function AssetPanel({
         {showAtlasBreakdown && activeDataUrl && (
           <AtlasBreakdown
             imgSrc={activeDataUrl}
+            imageSource={customActive ? "custom" : "default"}
             url={url}
             cacheFolder={cacheFolder}
             onSaved={() => refreshOverride(url)}

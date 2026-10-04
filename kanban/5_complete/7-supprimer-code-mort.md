@@ -20,8 +20,8 @@ baseline au moment de l'usage). `npm run check-arch -- --rule=ipc-unused --verbo
 —
 
 ## Checklist
-- [ ] canaux inutilisés retirés (preload + main)
-- [ ] imports/clé/prop inutilisés retirés
-- [ ] entrées baseline `ipc-unused` et `i18n-unused-key` retirées
-- [ ] skills main-ipc / shared-ui à jour
-- [ ] `npm run verify` OK
+- [x] canaux inutilisés retirés : `cache:listEntries` (+ `listCacheEntries`), `fumbbl:weatherCodes`. `overrides:list` **gardé** pour la couche données (#15), baseline réaffectée à #15
+- [x] imports/clé/prop inutilisés retirés (`useRef`×2, `Button`, `atlas.loadImageError`×4, prop `hint`) ; `noUnusedLocals` + `noUnusedParameters` activés dans `tsconfig.base.json`
+- [x] entrées baseline `i18n-unused-key` retirée, `ipc-unused` réduite à 1 (carte #15)
+- [x] skills main-ipc / feature-asset-editor à jour
+- [x] `npm run verify` OK

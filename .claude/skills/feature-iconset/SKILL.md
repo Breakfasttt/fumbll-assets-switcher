@@ -12,7 +12,7 @@ Un iconset FUMBBL est un atlas : **4 colonnes** (Home idle, Home moving, Away id
 
 | Fichier | Rôle |
 |---|---|
-| `src/renderer/features/iconset/AtlasBreakdown.tsx` | `canvasAtlasFromImage` (image → canvas + `cellSize` + `rows`), `canvasToPngBase64`, `ATLAS_COLUMN_LABELS` ; grille de vignettes 48 px cliquables (ouvre l'éditeur) ; Popover « Répéter une variante » (`applyUniformRow`) |
+| `src/renderer/features/iconset/AtlasBreakdown.tsx` | prop `imageSource` (default/custom) ; `canvasAtlasFromImage` (image → canvas + `cellSize` + `rows`), `canvasToPngBase64`, `ATLAS_COLUMN_LABELS` ; grille de vignettes 48 px cliquables (ouvre l'éditeur) ; Popover « Répéter une variante » (`applyUniformRow`) |
 | `src/renderer/features/iconset/PixelEditor.tsx` | types `AtlasInfo`, `EditorTarget` ; éditeur d'une cellule : Selects ligne/colonne, canvas zoom ×16, palette fixe 12 couleurs, gomme, « Enregistrer l'atlas » |
 | `src/renderer/features/iconset/index.ts` | API publique : `AtlasBreakdown`, `PixelEditor`, `AtlasInfo`, `EditorTarget` |
 
@@ -26,7 +26,7 @@ Utilisé par : `asset-editor` (AtlasBreakdown sous les slots) et `rosters` (Pixe
 
 ## Pièges connus
 
-- « Répéter une variante » part de l'image **active** (peut être le défaut) et écrase l'override existant sans prévenir (carte 5).
+- « Répéter une variante » part de l'image **active** : le popover affiche la source (`imageSource`) et une confirmation est demandée si la source est le défaut alors qu'un override custom existe (lu via `getOverride` au clic, pas depuis l'état du parent).
 - Libellés de colonnes en anglais en dur (`ATLAS_COLUMN_LABELS`) — non traduits.
 - `loadImage` / `canvasToPngBase64` dupliqués dans `shared/components/CropEditor.tsx` → à mutualiser dans `shared/lib`.
 - Éditeur pixel minimal : pas d'undo/redo, pas de pipette, pas de couleur libre, pas de raccourcis, souris uniquement.

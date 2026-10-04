@@ -367,16 +367,18 @@ for (const [column, limit] of Object.entries(kb.wipLimit)) {
 
 // ---------------------------------------------------------------- baseline
 
+// Chaque entrée tolère au plus `count` violations : une violation de plus (nouveau code) échoue.
 const tolerated = [];
 const activeFindings = [];
-const usedBaseline = new Set();
+const usedBaseline = new Map();
 for (const f of findings) {
   const entryIndex = config.baseline.findIndex((b) => b.rule === f.rule && b.file === f.file);
-  if (entryIndex >= 0) {
-    usedBaseline.add(entryIndex);
+  const used = usedBaseline.get(entryIndex) ?? 0;
+  if (entryIndex >= 0 && used < config.baseline[entryIndex].count) {
+    usedBaseline.set(entryIndex, used + 1);
     tolerated.push({ ...f, card: config.baseline[entryIndex].card });
   } else {
-    activeFindings.push(f);
+    activeFindings.push(entryIndex >= 0 ? { ...f, message: f.message + " (au-delà de la baseline)" } : f);
   }
 }
 if (!onlyRule) {
@@ -384,7 +386,9 @@ if (!onlyRule) {
     const card = byId.get(b.card);
     if (!card) activeFindings.push({ rule: "baseline", severity: "error", file: "architecture.config.mjs", line: 1, message: `baseline ${b.rule} ${b.file} : carte ${b.card} inexistante` });
     else if (["5_complete", "6_annule"].includes(card.column)) activeFindings.push({ rule: "baseline", severity: "error", file: "architecture.config.mjs", line: 1, message: `baseline ${b.rule} ${b.file} : carte ${b.card} close (${card.column}) mais violation toujours tolérée` });
-    if (!usedBaseline.has(i)) activeFindings.push({ rule: "baseline", severity: "error", file: "architecture.config.mjs", line: 1, message: `baseline obsolète : ${b.rule} ${b.file} ne viole plus rien — retirer l'entrée` });
+    const used = usedBaseline.get(i) ?? 0;
+    if (used === 0) activeFindings.push({ rule: "baseline", severity: "error", file: "architecture.config.mjs", line: 1, message: `baseline obsolète : ${b.rule} ${b.file} ne viole plus rien — retirer l'entrée` });
+    else if (used < b.count) activeFindings.push({ rule: "baseline", severity: "error", file: "architecture.config.mjs", line: 1, message: `baseline ${b.rule} ${b.file} : ${used} violation(s) restante(s), baisser count (${b.count}) à ${used}` });
   });
 }
 

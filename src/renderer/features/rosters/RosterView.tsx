@@ -87,7 +87,7 @@ export function RosterView({ cacheFolder }: { cacheFolder: string }) {
           </label>
         </div>
         {loadingRoster && <div className="mt-2 text-sm text-muted">{t("roster.loading")}</div>}
-        {error && <div className="mt-2 text-sm text-[#f43f5e]">{t("roster.errorPrefix", { error })}</div>}
+        {error && <div className="mt-2 text-sm text-danger">{t("roster.errorPrefix", { error })}</div>}
         {roster && (
           <div className="mt-2 text-sm text-muted">
             {t("roster.summaryLine", {

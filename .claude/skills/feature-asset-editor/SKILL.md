@@ -34,7 +34,6 @@ Dépendances : `@/features/iconset` (`AtlasBreakdown` affiché sous les slots si
 - `div role=button` + `<button>` imbriqués ; ✕ texte sans `aria-label`.
 - Logique quasi identique dupliquée dans `features/pitches/PitchView.tsx` (`PitchWeatherSlot`) : à factoriser dans un composant partagé lors de la refonte.
 - Affordance faible : l'état actif n'est signalé que par bordure + pastille orange.
-- Imports inutilisés (`useRef`, `Button`) — carte 7.
 
 ## Cible UX (validée)
 

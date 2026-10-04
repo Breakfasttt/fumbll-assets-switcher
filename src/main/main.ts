@@ -3,7 +3,6 @@ import * as path from "path";
 import { loadConfig, saveConfig } from "./config";
 import { detectAllCoaches } from "./lib/registry";
 import {
-  listCacheEntries,
   validateCacheFolder,
   readCachedImageDataUrl,
   listOrphanCacheFiles,
@@ -23,7 +22,6 @@ import {
 } from "./lib/overrides";
 import { fetchRoster, fetchDivisionRosters, fetchAssetImageDataUrl, fetchAssetImageBuffer } from "./lib/fumbblApi";
 import { listPacks, exportPack, importPack, activatePack, deletePack, clearActivePack } from "./lib/packs";
-import { WEATHER_CODES } from "../shared/types";
 
 // Dev mode only when launched by `npm run dev` (Vite server); `npm start` serves the built renderer.
 const isDev = process.argv.includes("--dev");
@@ -90,7 +88,6 @@ ipcMain.handle("dialog:selectZipFile", async () => {
 });
 
 ipcMain.handle("cache:validateFolder", (_e, folder: string) => validateCacheFolder(folder));
-ipcMain.handle("cache:listEntries", (_e, folder: string) => listCacheEntries(folder));
 ipcMain.handle("cache:openFolder", (_e, folder: string) => shell.openPath(folder));
 ipcMain.handle("shell:showFileInFolder", (_e, folder: string, fileName: string) =>
   shell.showItemInFolder(path.join(folder, fileName))
@@ -129,7 +126,6 @@ ipcMain.handle("packs:clearActive", () => clearActivePack());
 
 ipcMain.handle("fumbbl:fetchRoster", (_e, rosterId: number) => fetchRoster(rosterId));
 ipcMain.handle("fumbbl:fetchDivisionRosters", (_e, divisionId: number) => fetchDivisionRosters(divisionId));
-ipcMain.handle("fumbbl:weatherCodes", () => WEATHER_CODES);
 
 // Prefer the asset already sitting in the FFB client's own Local Icon Cache
 // (the real client downloaded it before) over hitting the FUMBBL CDN again.

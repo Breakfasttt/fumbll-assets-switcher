@@ -99,10 +99,6 @@ export async function removeImageFromCache(cacheFolder: string, url: string): Pr
   }
 }
 
-export async function listCacheEntries(cacheFolder: string): Promise<Record<string, string>> {
-  return readMapJson(cacheFolder);
-}
-
 /**
  * Lists files physically present in the FFB cache folder that map.json no
  * longer references - neither the real client nor our own tool would ever

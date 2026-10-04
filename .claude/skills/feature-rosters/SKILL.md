@@ -28,7 +28,6 @@ Dépendances : `@/features/asset-editor` (`AssetPanel`), `@/features/iconset` (`
 ## Pièges connus
 
 - `fetchAllRosters()` (6 requêtes) relancé à chaque montage de Rosters, Pitches et Orphelins.
-- Couleur d'erreur `text-[#f43f5e]` (baseline carte 9).
 - Pas de recherche/filtre de roster ni de position ; pas de mémorisation du dernier roster/position.
 - Layout en grilles fixes imbriquées, peu adapté aux petites fenêtres.
 

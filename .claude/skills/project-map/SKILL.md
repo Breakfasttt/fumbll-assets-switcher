@@ -84,7 +84,7 @@ docs/                ux-research.md (direction UX/UI + plan de refonte)
 | `i18n-parity` / `i18n-missing-key` / `i18n-unused-key` | mêmes clés dans les 4 langues, aucune clé inconnue |
 | `libraries` / `types-in-dev-deps` | toute dépendance déclarée avec scope + raison ; lib main pas dans le renderer et inversement |
 | `kanban` / `kanban-deps` | format des cartes, WIP, checklist cochée en à valider/complété |
-| `baseline` | violations tolérées, chacune liée à une carte ouverte ; une entrée devenue inutile fait échouer |
+| `baseline` | violations tolérées, chacune liée à une carte ouverte avec un `count` exact : une violation en plus échoue, une en moins demande de baisser `count` |
 
 **Ajouter une feature** : créer `src/renderer/features/<nom>/` + `index.ts`, la déclarer dans
 `architecture.config.mjs` (`features`), créer `.claude/skills/feature-<nom>/SKILL.md` (sur le modèle

@@ -100,14 +100,10 @@ export default {
   },
 
   // Violations connues tolérées, chacune rattachée à la carte qui doit la corriger.
-  // Une entrée qui ne correspond plus à aucune violation fait échouer le script (à retirer).
+  // `count` = nombre exact de violations tolérées : plus (nouveau code) ou moins (count à baisser) fait échouer.
   baseline: [
-    { rule: "no-native-dialog", file: "src/renderer/features/config/ConfigView.tsx", card: 8 },
-    { rule: "no-native-dialog", file: "src/renderer/features/packs/PacksView.tsx", card: 8 },
-    { rule: "no-hardcoded-color", file: "src/renderer/features/config/ConfigView.tsx", card: 9 },
-    { rule: "no-hardcoded-color", file: "src/renderer/features/rosters/RosterView.tsx", card: 9 },
-    { rule: "types-in-dev-deps", file: "package.json", card: 6 },
-    { rule: "ipc-unused", file: "src/main/preload.ts", card: 7 },
-    { rule: "i18n-unused-key", file: "src/renderer/shared/i18n/translations.ts", card: 7 },
+    { rule: "no-native-dialog", file: "src/renderer/features/config/ConfigView.tsx", card: 8, count: 3 },
+    { rule: "no-native-dialog", file: "src/renderer/features/packs/PacksView.tsx", card: 8, count: 2 },
+    { rule: "ipc-unused", file: "src/main/preload.ts", card: 15, count: 1 },
   ],
 };

@@ -19,6 +19,7 @@ le popover quelle image sert de source (défaut ou custom).
 Refonte de l'éditeur.
 
 ## Checklist
-- [ ] source affichée dans le popover
-- [ ] confirmation si écrasement d'un override
-- [ ] `npm run verify` OK
+- [x] source affichée dans le popover (`atlas.sourceDefault` / `atlas.sourceCustom`) — prop `imageSource` passée par AssetPanel
+- [x] confirmation (`atlas.overwriteCustomConfirm`) si la source est le défaut et qu'un override existe — lu via IPC `getOverride` au clic (v1 reposait sur l'état d'AssetPanel : retour utilisateur « pas de confirmation »)
+- [x] skill feature-iconset à jour
+- [x] `npm run verify` OK
